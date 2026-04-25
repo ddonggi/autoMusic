@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+
+# Environment and local secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# API credentials and OAuth tokens
+client_secret*.json
+credentials*.json
+token*.json
+oauth*.json
+service-account*.json
+service_account*.json
+google-application-credentials*.json
+youtube_token*.json
+openai*.key
+gemini*.key
+
+# Local secret/config overrides
+configs/*.local.*
+configs/*secret*
+configs/*credential*
+configs/*token*
+
+# Generated pipeline assets
+workspace/
+success/
+data/
+outputs/
+tmp/
+*.wav
+*.mp3
+*.m4a
+*.aac
+*.flac
+*.mp4
+*.mov
+*.gif
+*.png
+*.jpg
+*.jpeg
+*.webp
+
+# OS/editor noise
+.DS_Store
+.idea/
+.vscode/
