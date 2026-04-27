@@ -34,6 +34,7 @@ configs/*credential*
 configs/*token*
 
 # Generated pipeline assets
+.worktrees/
 workspace/
 success/
 data/
