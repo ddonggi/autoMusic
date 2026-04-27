@@ -1,0 +1,24 @@
+duration_seconds: 180
+genre: Brazilian phonk
+bpm_min: 132
+bpm_max: 138
+mood:
+  - aggressive
+  - adrenaline-charged
+  - focused
+instruments:
+  - distorted 808 bass
+  - driving cowbell lead
+  - punchy kick
+  - sharp snare
+texture:
+  - clipped saturation
+  - gritty street-gym atmosphere
+  - wide low-end
+vocals: none
+temperature: 1.1
+negative_rules:
+  - no artist-name imitation
+  - no copyrighted song references
+  - no long silence
+  - no abrupt ending
