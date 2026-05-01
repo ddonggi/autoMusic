@@ -2,6 +2,8 @@
 
 AutoMusic generates daily Brazilian phonk workout tracks, creates matching background images, batches 10 tracks into one MP4, uploads it to YouTube as private, and archives successful outputs.
 
+Music and image prompts are variant-based. Each run keeps the phonk genre but chooses a safe internal style variant instead of naming or imitating reference songs.
+
 ## Setup
 
 Install runtime dependencies:
@@ -56,7 +58,7 @@ The pipeline can also be run step by step:
 
 ```bash
 python3 scripts/generate_music.py --config configs/examples/music.yaml
-python3 scripts/generate_image.py workspace/tracks/<track-id>
+python3 scripts/generate_image.py workspace/tracks/<track-id> --config configs/examples/music.yaml
 python3 scripts/build_batch.py
 python3 scripts/render_video.py workspace/batches/<batch-id>
 python3 scripts/upload_youtube.py workspace/batches/<batch-id> --config configs/examples/upload.yaml

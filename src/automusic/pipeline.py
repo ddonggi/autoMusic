@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 from .archive import archive_success
 from .audio import write_pcm16_wav
 from .batch import build_batch
-from .prompts import build_image_prompt, build_music_prompt
+from .prompts import build_image_prompt_with_metadata, build_music_prompt_with_metadata
 from .state import load_json, save_json
 
 
@@ -15,11 +15,12 @@ def dry_run_music(config: dict, tracks_root: Path) -> Path:
     now = datetime.now(ZoneInfo("Asia/Seoul"))
     track_dir = _make_unique_dir(tracks_root, f"{now:%Y%m%d-%H%M%S}-dry-run")
     track_id = track_dir.name
-    music_prompt = build_music_prompt(config)
+    music_result = build_music_prompt_with_metadata(config)
+    music_prompt = str(music_result["prompt"])
     metadata = {
         "genre": config.get("genre", "Brazilian phonk"),
-        "mood": config.get("mood", []),
-        "texture": config.get("texture", []),
+        "mood": music_result["mood"],
+        "texture": music_result["texture"],
     }
     duration_seconds = write_pcm16_wav([b"\x00\x00\x00\x00" * 48_000], track_dir / "audio.wav")
     save_json(
@@ -30,6 +31,8 @@ def dry_run_music(config: dict, tracks_root: Path) -> Path:
             "genre": metadata["genre"],
             "mood": metadata["mood"],
             "texture": metadata["texture"],
+            "music_variant": music_result["music_variant"],
+            "image_variant": None,
             "music_prompt": music_prompt,
             "image_prompt": None,
             "duration_seconds": duration_seconds,
@@ -42,14 +45,16 @@ def dry_run_music(config: dict, tracks_root: Path) -> Path:
     return track_dir
 
 
-def dry_run_image(track_dir: Path) -> Path:
+def dry_run_image(track_dir: Path, config: dict | None = None) -> Path:
     track_json = track_dir / "track.json"
     track = load_json(track_json)
-    image_prompt = build_image_prompt(track["music_prompt"], track)
+    image_result = build_image_prompt_with_metadata(track["music_prompt"], track, config or {})
+    image_prompt = str(image_result["prompt"])
     image_path = track_dir / "image.png"
     image_path.write_bytes(_one_pixel_png())
     track["status"] = "imaged"
     track["image_prompt"] = image_prompt
+    track["image_variant"] = image_result["image_variant"]
     track["image_path"] = "image.png"
     save_json(track_json, track)
     return image_path
@@ -57,7 +62,7 @@ def dry_run_image(track_dir: Path) -> Path:
 
 def dry_run_daily(config: dict, tracks_root: Path) -> Path:
     track_dir = dry_run_music(config, tracks_root)
-    dry_run_image(track_dir)
+    dry_run_image(track_dir, config)
     return track_dir
 
 

@@ -12,7 +12,7 @@ from automusic.config import load_config, load_dotenv
 from automusic.image import generate_image
 from automusic.music import generate_lyria_track
 from automusic.pipeline import dry_run_daily
-from automusic.prompts import build_image_prompt
+from automusic.prompts import build_image_prompt_with_metadata
 from automusic.state import load_json, save_json
 
 
@@ -32,9 +32,11 @@ def main() -> None:
         track_dir = asyncio.run(generate_lyria_track(config, tracks_root))
         track_path = track_dir / "track.json"
         track = load_json(track_path)
-        image_prompt = build_image_prompt(track["music_prompt"], track)
+        image_result = build_image_prompt_with_metadata(track["music_prompt"], track, config)
+        image_prompt = str(image_result["prompt"])
         generate_image(image_prompt, track_dir / "image.png")
         track["image_prompt"] = image_prompt
+        track["image_variant"] = image_result["image_variant"]
         track["image_path"] = "image.png"
         track["status"] = "imaged"
         save_json(track_path, track)

@@ -22,3 +22,146 @@ negative_rules:
   - no copyrighted song references
   - no long silence
   - no abrupt ending
+prompt_variants:
+  - name: rugged-cowbell
+    bpm_min: 132
+    bpm_max: 138
+    mood:
+      - rugged
+      - aggressive
+      - heavy-lifting
+    instruments:
+      - raspy cowbell lead
+      - distorted 808 bass punches
+      - hard clipped kick
+    texture:
+      - rough concrete gym grit
+      - saturated low-end impact
+  - name: accelerated-baile
+    bpm_min: 138
+    bpm_max: 144
+    mood:
+      - accelerated
+      - explosive
+      - sprint-focused
+    instruments:
+      - fast baile-funk percussion
+      - sharp cowbell patterns
+      - tight snare rolls
+    texture:
+      - street-rave pressure
+      - clipped transient energy
+  - name: loose-step
+    bpm_min: 128
+    bpm_max: 134
+    mood:
+      - loose
+      - swaggering
+      - confident
+    instruments:
+      - syncopated percussion
+      - rolling 808 bass
+      - playful cowbell phrases
+    texture:
+      - sweaty gym floor bounce
+      - elastic groove movement
+  - name: tomada-drive
+    bpm_min: 134
+    bpm_max: 140
+    mood:
+      - driving
+      - tense
+      - relentless
+    instruments:
+      - pounding kick pattern
+      - tense cowbell hook
+      - compressed sub bass
+    texture:
+      - forward momentum
+      - metallic distortion edge
+  - name: slay-energy
+    bpm_min: 132
+    bpm_max: 138
+    mood:
+      - sharp
+      - confident
+      - high-impact
+    instruments:
+      - polished cowbell lead
+      - punchy 808 slides
+      - crisp club drums
+    texture:
+      - glossy gym intensity
+      - clean saturated loudness
+  - name: pr-funk-pressure
+    bpm_min: 136
+    bpm_max: 142
+    mood:
+      - pressured
+      - competitive
+      - peak-set
+    instruments:
+      - dense baile percussion
+      - aggressive cowbell accents
+      - heavy sub drops
+    texture:
+      - low-end pressure
+      - crowded street workout atmosphere
+  - name: dark-mind
+    bpm_min: 130
+    bpm_max: 136
+    mood:
+      - dark
+      - focused
+      - menacing
+    instruments:
+      - shadowy distorted 808 bass
+      - minimal cowbell motif
+      - hard snare hits
+    texture:
+      - shadowy low-end pressure
+      - cold saturated air
+  - name: rave-metamorphosis
+    bpm_min: 138
+    bpm_max: 145
+    mood:
+      - rave-charged
+      - transforming
+      - euphoric
+    instruments:
+      - phonk cowbell lead
+      - rising rave synth pressure
+      - distorted 808 drive
+    texture:
+      - neon club compression
+      - evolving filter movement
+  - name: avant-garde-phonk
+    bpm_min: 126
+    bpm_max: 134
+    mood:
+      - experimental
+      - tense
+      - unpredictable
+    instruments:
+      - off-grid cowbell fragments
+      - angular percussion
+      - warped sub bass
+    texture:
+      - avant-garde tension
+      - gritty digital artifacts
+image_variants:
+  - name: cyberpunk-gym
+    visual_style: cyberpunk gym scene
+    subject: athletic silhouette training in a neon-lit urban fitness space
+    palette: electric cyan, magenta, black, high contrast
+    texture: rainy neon haze, chrome reflections, cinematic shadows
+  - name: bodybuilder-shadow
+    visual_style: dramatic fitness portrait
+    subject: powerful bodybuilder silhouette in a gritty gym
+    palette: deep black, steel gray, warm highlights
+    texture: sweat, chalk dust, hard rim light, heavy shadows
+  - name: phonk-album-cover
+    visual_style: phonk album cover composition
+    subject: powerful central chrome object and abstract gym energy
+    palette: black, red, silver, high contrast
+    texture: grainy cover art, bold shadows, sharp graphic framing

@@ -7,7 +7,7 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 from .audio import write_pcm16_wav
-from .prompts import build_music_prompt
+from .prompts import build_music_prompt_with_metadata
 from .state import save_json
 
 
@@ -23,7 +23,8 @@ async def generate_lyria_track(config: dict[str, Any], workspace_tracks: Path) -
     track_id = make_track_id(now)
     track_dir = _make_unique_dir(workspace_tracks, track_id)
     track_id = track_dir.name
-    prompt = build_music_prompt(config)
+    music_result = build_music_prompt_with_metadata(config)
+    prompt = str(music_result["prompt"])
     target_seconds = int(config.get("duration_seconds", 180))
     client = genai.Client(http_options={"api_version": "v1alpha"})
     pcm_chunks: list[bytes] = []
@@ -34,7 +35,7 @@ async def generate_lyria_track(config: dict[str, Any], workspace_tracks: Path) -
         )
         await session.set_music_generation_config(
             config=types.LiveMusicGenerationConfig(
-                bpm=int(config.get("bpm", config.get("bpm_min", 136))),
+                bpm=int(config.get("bpm", music_result.get("bpm") or config.get("bpm_min", 136))),
                 temperature=float(config.get("temperature", 1.1)),
             )
         )
@@ -57,8 +58,10 @@ async def generate_lyria_track(config: dict[str, Any], workspace_tracks: Path) -
             "track_id": track_id,
             "status": "generated",
             "genre": config.get("genre", "Brazilian phonk"),
-            "mood": config.get("mood", []),
-            "texture": config.get("texture", []),
+            "mood": music_result["mood"],
+            "texture": music_result["texture"],
+            "music_variant": music_result["music_variant"],
+            "image_variant": None,
             "music_prompt": prompt,
             "image_prompt": None,
             "duration_seconds": duration_seconds,

@@ -16,13 +16,14 @@ Implemented:
 - Upload the rendered MP4 to YouTube as `private`.
 - Move successfully uploaded tracks and batches to `success/`.
 - Run the full flow in `--dry-run` mode without external API calls.
+- Vary music and image prompts per run using internal prompt variants.
 
 Not yet implemented:
 
 - Animated visual effects from the background image.
 - Real GIF generation as a reusable output.
 - Automatic scheduling.
-- Live API verification with real Gemini, OpenAI, and YouTube credentials in this environment.
+- Live YouTube upload verification in this environment. Gemini and OpenAI daily generation has been verified once.
 
 ## Main Commands
 
@@ -48,6 +49,12 @@ Run one real daily generation:
 
 ```bash
 python3 scripts/run_daily.py --config configs/examples/music.yaml
+```
+
+Run separated image generation with the same config when you want image variants from `configs/examples/music.yaml`:
+
+```bash
+python3 scripts/generate_image.py workspace/tracks/<track-id> --config configs/examples/music.yaml
 ```
 
 Run batch upload dry-run after 10 tracks exist:
@@ -203,6 +210,7 @@ Music prompts are built from structured config fields:
 - `texture`
 - `vocals`
 - `negative_rules`
+- `prompt_variants`
 
 The default style is Brazilian phonk for gym and workout use:
 
@@ -211,7 +219,14 @@ Brazilian phonk, aggressive workout energy, distorted 808 bass,
 driving cowbell lead, punchy drums, gritty street-gym texture.
 ```
 
-Image prompts are derived from the music metadata, but they are not a direct copy of the music prompt. The image prompt turns the sound into visual direction: dark urban gym atmosphere, concrete and metal textures, dramatic light, full-screen 16:9 background, no text, no logos, no watermark.
+The config also includes internal variants inspired by high-energy phonk listening references. Reference song titles are not sent to the API. They are translated into safe descriptors such as accelerated baile-funk percussion, aggressive cowbell lead, dark distorted 808, rave synth pressure, loose syncopated groove, and avant-garde tension.
+
+Image prompts are derived from the music metadata, but they are not a direct copy of the music prompt. The image prompt turns the sound into visual direction. Current image variants include cyberpunk gym, bodybuilder shadow, and phonk album-cover styles. All image prompts include 16:9 framing, no text, no logos, no watermark, and no real artist reference.
+
+Each new `track.json` records:
+
+- `music_variant`
+- `image_variant`
 
 ## Rendering
 

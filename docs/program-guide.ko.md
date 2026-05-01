@@ -16,13 +16,14 @@ AutoMusic은 브라질리언 폰크 스타일의 운동용 음악 영상을 자�
 - YouTube에 `private` 영상으로 업로드
 - 업로드 성공한 트랙과 배치를 `success/`로 이동
 - 외부 API를 호출하지 않는 `--dry-run` 모드 지원
+- 매 실행마다 내부 variant를 선택해 음악/이미지 프롬프트 다양화
 
 아직 미구현:
 
 - 배경 이미지에 줌, 팬, 글로우, 그레인 같은 애니메이션 효과 적용
 - 재사용 가능한 실제 GIF 산출물 생성
 - 매일 자동 실행 스케줄링
-- 실제 Gemini, OpenAI, YouTube 인증값으로 라이브 API 검증
+- 실제 YouTube 업로드 검증. Gemini와 OpenAI를 이용한 하루 생성은 1회 실제 검증됨
 
 ## 실행 위치
 
@@ -105,6 +106,12 @@ workspace/tracks/<track-id>/
 python3 scripts/run_daily.py --config configs/examples/music.yaml
 ```
 
+음악과 이미지를 단계별로 나눠 실행할 때도 이미지 variant가 설정 파일을 따르게 하려면 같은 음악 설정 파일을 넘깁니다.
+
+```bash
+python3 scripts/generate_image.py workspace/tracks/<track-id> --config configs/examples/music.yaml
+```
+
 실제 실행 결과:
 
 - Lyria로 약 3분 음악 생성
@@ -116,7 +123,7 @@ python3 scripts/run_daily.py --config configs/examples/music.yaml
 주의:
 
 - 실제 실행은 API 비용이 발생할 수 있습니다.
-- 현재 환경에서는 실제 API 키로 검증하지 않았습니다.
+- 현재 환경에서 Gemini 음악 생성과 OpenAI 이미지 생성은 1회 실제 검증했습니다.
 
 ## 10곡 배치 업로드 실행
 
@@ -260,6 +267,7 @@ assembled -> rendered -> uploaded -> archived
 - `texture`
 - `vocals`
 - `negative_rules`
+- `prompt_variants`
 
 기본 방향은 운동용 브라질리언 폰크입니다.
 
@@ -268,7 +276,14 @@ Brazilian phonk, aggressive workout energy, distorted 808 bass,
 driving cowbell lead, punchy drums, gritty street-gym texture.
 ```
 
-이미지 프롬프트는 음악 프롬프트를 그대로 복사하지 않습니다. 음악 메타데이터를 바탕으로 어두운 도시형 체육관 분위기, 콘크리트와 금속 질감, 강한 조명, 16:9 배경, 텍스트 없음, 로고 없음, 워터마크 없음 같은 시각 지시문으로 변환합니다.
+설정 파일에는 고에너지 phonk 참고곡에서 착안한 내부 variant가 들어갑니다. 실제 API 프롬프트에는 참고곡 제목을 직접 넣지 않습니다. 대신 빠른 baile-funk 퍼커션, 공격적인 카우벨 리드, 어두운 distorted 808, rave synth pressure, 느슨한 syncopated groove, avant-garde tension 같은 안전한 설명으로 변환합니다.
+
+이미지 프롬프트는 음악 프롬프트를 그대로 복사하지 않습니다. 음악 메타데이터를 바탕으로 시각 지시문을 만듭니다. 현재 이미지 variant는 사이버펑크 체육관, 보디빌더 실루엣, phonk 앨범커버 계열입니다. 모든 이미지 프롬프트에는 16:9, 텍스트 없음, 로고 없음, 워터마크 없음, 실존 아티스트 참조 없음 규칙이 들어갑니다.
+
+새로 생성되는 `track.json`에는 아래 값이 기록됩니다.
+
+- `music_variant`
+- `image_variant`
 
 ## 렌더링
 

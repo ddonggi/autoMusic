@@ -4,7 +4,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from automusic.prompts import build_image_prompt, build_music_prompt
+from automusic.prompts import (
+    build_image_prompt,
+    build_image_prompt_with_metadata,
+    build_music_prompt,
+    build_music_prompt_with_metadata,
+)
 
 
 class PromptTests(unittest.TestCase):
@@ -49,6 +54,96 @@ class PromptTests(unittest.TestCase):
         self.assertIn("workout", image_prompt.lower())
         self.assertIn("no text", image_prompt.lower())
         self.assertNotEqual(music_prompt, image_prompt)
+
+    def test_build_music_prompt_with_metadata_uses_seeded_variant(self):
+        config = {
+            "duration_seconds": 180,
+            "genre": "Brazilian phonk",
+            "seed": 7,
+            "prompt_variants": [
+                {
+                    "name": "accelerated-baile",
+                    "bpm_min": 138,
+                    "bpm_max": 144,
+                    "mood": ["accelerated", "explosive"],
+                    "instruments": ["fast baile-funk percussion", "sharp cowbell patterns"],
+                    "texture": ["street-rave pressure"],
+                }
+            ],
+            "negative_rules": ["no artist-name imitation", "no copyrighted song references"],
+        }
+
+        first = build_music_prompt_with_metadata(config)
+        second = build_music_prompt_with_metadata(config)
+
+        self.assertEqual(first["music_variant"], "accelerated-baile")
+        self.assertEqual(first, second)
+        self.assertIn("138-144 BPM", first["prompt"])
+        self.assertIn("fast baile-funk percussion", first["prompt"])
+        self.assertIn("street-rave pressure", first["prompt"])
+
+    def test_music_prompt_does_not_include_reference_song_titles(self):
+        config = {
+            "duration_seconds": 180,
+            "genre": "Brazilian phonk",
+            "seed": 0,
+            "prompt_variants": [
+                {
+                    "name": "dark-mind",
+                    "mood": ["dark", "focused"],
+                    "instruments": ["distorted 808 bass", "aggressive cowbell lead"],
+                    "texture": ["shadowy low-end pressure"],
+                }
+            ],
+        }
+
+        result = build_music_prompt_with_metadata(config)
+
+        forbidden_titles = [
+            "montagem rugada",
+            "acelerada",
+            "passo bem solto",
+            "montagem tomada",
+            "slay!",
+            "montagem - pr funk",
+            "murder in my mind",
+            "rave",
+            "metamorphosis",
+            "avangard-lonown",
+        ]
+        lowered = result["prompt"].lower()
+        for title in forbidden_titles:
+            self.assertNotIn(title, lowered)
+
+    def test_build_image_prompt_with_metadata_uses_album_cover_variant_and_safety_rules(self):
+        config = {
+            "seed": 3,
+            "image_variants": [
+                {
+                    "name": "phonk-album-cover",
+                    "visual_style": "phonk album cover composition",
+                    "subject": "powerful central chrome object and abstract gym energy",
+                    "palette": "black, red, silver, high contrast",
+                    "texture": "grainy cover art, bold shadows",
+                }
+            ],
+        }
+        metadata = {
+            "genre": "Brazilian phonk",
+            "mood": ["aggressive"],
+            "texture": ["wide low-end"],
+        }
+
+        result = build_image_prompt_with_metadata("music prompt", metadata, config)
+        prompt = result["prompt"].lower()
+
+        self.assertEqual(result["image_variant"], "phonk-album-cover")
+        self.assertIn("album cover", prompt)
+        self.assertIn("16:9", prompt)
+        self.assertIn("no text", prompt)
+        self.assertIn("no logos", prompt)
+        self.assertIn("no watermark", prompt)
+        self.assertIn("no real artist reference", prompt)
 
 
 if __name__ == "__main__":

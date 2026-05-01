@@ -22,6 +22,7 @@ class PipelineCliTests(unittest.TestCase):
         self.assertEqual(track["status"], "generated")
         self.assertEqual(track["audio_path"], "audio.wav")
         self.assertIsNone(track["image_path"])
+        self.assertIn("music_variant", track)
 
     def test_dry_run_music_generates_unique_track_dirs(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -51,12 +52,29 @@ class PipelineCliTests(unittest.TestCase):
             config = {
                 "duration_seconds": 180,
                 "genre": "Brazilian phonk",
+                "seed": 2,
                 "bpm_min": 132,
                 "bpm_max": 138,
                 "mood": ["aggressive"],
                 "instruments": ["distorted 808 bass"],
                 "texture": ["gritty street-gym atmosphere"],
                 "vocals": "none",
+                "prompt_variants": [
+                    {
+                        "name": "rugged-cowbell",
+                        "instruments": ["raspy cowbell lead"],
+                        "texture": ["distorted low-end grit"],
+                    }
+                ],
+                "image_variants": [
+                    {
+                        "name": "cyberpunk-gym",
+                        "visual_style": "cyberpunk gym scene",
+                        "subject": "athletic silhouette in neon-lit training space",
+                        "palette": "cyan, magenta, black",
+                        "texture": "rainy neon haze",
+                    }
+                ],
             }
 
             track_dir = dry_run_daily(config, root / "workspace" / "tracks")
@@ -67,6 +85,8 @@ class PipelineCliTests(unittest.TestCase):
         self.assertEqual(track["image_path"], "image.png")
         self.assertTrue(track["music_prompt"])
         self.assertTrue(track["image_prompt"])
+        self.assertEqual(track["music_variant"], "rugged-cowbell")
+        self.assertEqual(track["image_variant"], "cyberpunk-gym")
 
     def test_dry_run_batch_upload_requires_ten_tracks_and_archives_success(self):
         with tempfile.TemporaryDirectory() as tmp:
