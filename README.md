@@ -20,14 +20,18 @@ OPENAI_API_KEY=
 YOUTUBE_CLIENT_ID=
 YOUTUBE_CLIENT_SECRET=
 YOUTUBE_REFRESH_TOKEN=
-GMAIL_SMTP_USER=
-GMAIL_SMTP_APP_PASSWORD=
-NOTIFY_EMAIL_TO=
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=
+SMTP_PASSWORD=
+SMTP_FROM_EMAIL=
+SMTP_TO_EMAIL=
+SMTP_USE_TLS=true
 ```
 
 Do not commit `.env`, token files, generated media, `workspace/`, or `success/`.
 
-Gmail settings are optional. If set, live daily generation sends a completion email, and batch upload sends success or failure emails.
+SMTP settings are optional. If set, live daily generation sends a completion email, and batch upload sends success or failure emails.
 
 ## Dry Run
 

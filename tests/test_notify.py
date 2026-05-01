@@ -95,6 +95,49 @@ class NotifyTests(unittest.TestCase):
         self.assertEqual(sent_messages[1][1:4], ("sender@gmail.com", "receiver@gmail.com", "subject"))
         self.assertIn("body", sent_messages[1][4])
 
+    def test_send_gmail_notification_accepts_generic_smtp_tls_config(self):
+        sent_messages = []
+
+        class FakeSmtp:
+            def __init__(self, host, port):
+                sent_messages.append(("connect", host, port))
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, traceback):
+                return False
+
+            def starttls(self):
+                sent_messages.append(("starttls",))
+
+            def login(self, user, password):
+                sent_messages.append(("login", user, password))
+
+            def send_message(self, message):
+                sent_messages.append(("send", message["From"], message["To"], message["Subject"]))
+
+        sent = send_gmail_notification(
+            Notification("subject", "body"),
+            env={
+                "SMTP_HOST": "smtp.gmail.com",
+                "SMTP_PORT": "587",
+                "SMTP_USERNAME": "sender@gmail.com",
+                "SMTP_PASSWORD": "app-password",
+                "SMTP_FROM_EMAIL": "from@gmail.com",
+                "SMTP_TO_EMAIL": "receiver@gmail.com",
+                "SMTP_USE_TLS": "true",
+            },
+            smtp_factory=FakeSmtp,
+            smtp_ssl_factory=lambda host, port: self.fail("SMTP_SSL should not be used"),
+        )
+
+        self.assertTrue(sent)
+        self.assertEqual(sent_messages[0], ("connect", "smtp.gmail.com", 587))
+        self.assertEqual(sent_messages[1], ("starttls",))
+        self.assertEqual(sent_messages[2], ("login", "sender@gmail.com", "app-password"))
+        self.assertEqual(sent_messages[3], ("send", "from@gmail.com", "receiver@gmail.com", "subject"))
+
 
 if __name__ == "__main__":
     unittest.main()

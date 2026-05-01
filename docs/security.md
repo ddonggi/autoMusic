@@ -11,9 +11,10 @@ Keep these values in `.env` or your shell environment only:
 - `YOUTUBE_CLIENT_ID`
 - `YOUTUBE_CLIENT_SECRET`
 - `YOUTUBE_REFRESH_TOKEN`
-- `GMAIL_SMTP_USER`
-- `GMAIL_SMTP_APP_PASSWORD`
-- `NOTIFY_EMAIL_TO`
+- `SMTP_USERNAME`
+- `SMTP_PASSWORD`
+- `SMTP_FROM_EMAIL`
+- `SMTP_TO_EMAIL`
 
 Commit only `.env.example`, which contains empty placeholders.
 

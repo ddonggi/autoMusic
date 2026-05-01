@@ -61,23 +61,28 @@ def send_gmail_notification(
     notification: Notification,
     *,
     env: Mapping[str, str] | None = None,
-    smtp_factory=smtplib.SMTP_SSL,
+    smtp_factory=None,
+    smtp_ssl_factory=None,
 ) -> bool:
     env = os.environ if env is None else env
-    user = env.get("GMAIL_SMTP_USER")
-    password = env.get("GMAIL_SMTP_APP_PASSWORD")
-    recipient = env.get("NOTIFY_EMAIL_TO")
-    if not user or not password or not recipient:
+    config = _load_smtp_config(env)
+    if config is None:
         return False
+    custom_smtp_factory = smtp_factory is not None
+    smtp_factory = smtp_factory or smtplib.SMTP
+    smtp_ssl_factory = smtp_ssl_factory or (smtp_factory if custom_smtp_factory else smtplib.SMTP_SSL)
 
     message = EmailMessage()
-    message["From"] = user
-    message["To"] = recipient
+    message["From"] = config["from_email"]
+    message["To"] = config["to_email"]
     message["Subject"] = notification.subject
     message.set_content(notification.body)
 
-    with smtp_factory("smtp.gmail.com", 465) as smtp:
-        smtp.login(user, password)
+    factory = smtp_factory if config["use_tls"] else smtp_ssl_factory
+    with factory(config["host"], config["port"]) as smtp:
+        if config["use_tls"]:
+            smtp.starttls()
+        smtp.login(config["username"], config["password"])
         smtp.send_message(message)
     return True
 
@@ -91,3 +96,26 @@ def send_notification_safely(notification: Notification) -> bool:
     except Exception as exc:  # pragma: no cover - defensive logging for live SMTP failures.
         print(f"Notification skipped after SMTP failure: {exc}", file=sys.stderr)
         return False
+
+
+def _load_smtp_config(env: Mapping[str, str]) -> dict[str, object] | None:
+    username = env.get("SMTP_USERNAME") or env.get("GMAIL_SMTP_USER")
+    password = env.get("SMTP_PASSWORD") or env.get("GMAIL_SMTP_APP_PASSWORD")
+    to_email = env.get("SMTP_TO_EMAIL") or env.get("NOTIFY_EMAIL_TO")
+    if not username or not password or not to_email:
+        return None
+
+    use_tls = _env_bool(env.get("SMTP_USE_TLS"))
+    return {
+        "host": env.get("SMTP_HOST") or "smtp.gmail.com",
+        "port": int(env.get("SMTP_PORT") or (587 if use_tls else 465)),
+        "username": username,
+        "password": password,
+        "from_email": env.get("SMTP_FROM_EMAIL") or username,
+        "to_email": to_email,
+        "use_tls": use_tls,
+    }
+
+
+def _env_bool(value: str | None) -> bool:
+    return str(value or "").strip().lower() in {"1", "true", "yes", "y", "on"}

@@ -78,9 +78,13 @@ YOUTUBE_REFRESH_TOKEN=
 Gmail 알림에 선택적으로 필요:
 
 ```bash
-GMAIL_SMTP_USER=
-GMAIL_SMTP_APP_PASSWORD=
-NOTIFY_EMAIL_TO=
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=
+SMTP_PASSWORD=
+SMTP_FROM_EMAIL=
+SMTP_TO_EMAIL=
+SMTP_USE_TLS=true
 ```
 
 `.env.example`을 복사해 `.env`를 만들고 실제 값을 넣으면 됩니다. `.env`는 `.gitignore`에 의해 커밋되지 않습니다.
@@ -328,7 +332,7 @@ Gmail SMTP 앱 비밀번호를 설정하면 다음 시점에 메일을 보냅니
 - 배치가 YouTube 업로드와 `success/` 이동까지 성공한 경우
 - 기존 배치가 렌더링, YouTube 인증값 확인, 업로드, 아카이브 단계에서 실패한 경우
 
-Gmail 환경변수가 없거나 SMTP 전송이 실패해도 음악 생성이나 업로드 결과는 실패로 바꾸지 않습니다.
+SMTP 환경변수가 없거나 전송이 실패해도 음악 생성이나 업로드 결과는 실패로 바꾸지 않습니다.
 
 ## 실패와 재시도
 

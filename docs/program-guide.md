@@ -96,9 +96,13 @@ YOUTUBE_REFRESH_TOKEN=
 Optional for Gmail notifications:
 
 ```bash
-GMAIL_SMTP_USER=
-GMAIL_SMTP_APP_PASSWORD=
-NOTIFY_EMAIL_TO=
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=
+SMTP_PASSWORD=
+SMTP_FROM_EMAIL=
+SMTP_TO_EMAIL=
+SMTP_USE_TLS=true
 ```
 
 Use `.env.example` as the template. Keep real values only in `.env`.
@@ -132,7 +136,7 @@ Notification behavior:
 - A live `run_daily.py` success sends a Gmail message after audio and image are both complete.
 - Batch upload success sends a Gmail message after YouTube upload and archive movement complete.
 - Batch upload failure sends a Gmail message when a batch already exists and a render, credential, upload, or archive step fails.
-- Missing Gmail SMTP settings skip notification only; they do not fail the music or upload pipeline.
+- Missing SMTP settings skip notification only; they do not fail the music or upload pipeline.
 
 ## Folder Structure
 
