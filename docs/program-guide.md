@@ -1,91 +1,68 @@
-# AutoMusic Program Guide
+# AutoMusic 프로그램 가이드
 
-AutoMusic is a local automation pipeline for creating Brazilian phonk workout music videos.
+AutoMusic은 브라질리언 폰크 스타일의 운동용 음악 영상을 자동 생성하기 위한 로컬 파이프라인입니다. 하루에 음악 1개와 배경 이미지 1장을 만들고, 완성 트랙 10개가 모이면 하나의 긴 MP4로 렌더링해 YouTube에 비공개 업로드한 뒤 `success/`에 보관합니다.
 
-The pipeline creates one short track per daily run, generates a matching background image, waits until 10 completed tracks exist, renders them into one longer MP4, uploads the MP4 to YouTube as a private video, and moves completed assets into the success archive.
+## 현재 가능한 기능
 
-## Current Capability
+구현됨:
 
-Implemented:
+- Google Gemini Lyria로 하루 음악 트랙 1개 생성
+- OpenAI 이미지 API로 16:9 배경 이미지 1장 생성
+- 각 트랙을 `workspace/tracks/` 아래 구조화된 폴더로 저장
+- 완료된 트랙 중 가장 오래된 10개를 선택해 배치 생성
+- 실패한 미완료 배치가 있으면 새 배치보다 먼저 재시도
+- `ffmpeg`로 배치 MP4 렌더링
+- YouTube에 `private` 영상으로 업로드
+- 업로드 성공한 트랙과 배치를 `success/`로 이동
+- 외부 API를 호출하지 않는 `--dry-run` 모드 지원
+- 음악/이미지 프롬프트 variant를 매 실행마다 선택
+- Gmail SMTP 성공/실패 알림
+- macOS `launchd` 기반 매일 12:00 자동 실행
 
-- Generate a daily music track with Google Gemini Lyria RealTime.
-- Generate a matching 16:9 background image with the OpenAI image API.
-- Store each track as a structured folder under `workspace/tracks/`.
-- Select the oldest 10 completed tracks for a batch.
-- Render a batch MP4 with `ffmpeg`.
-- Upload the rendered MP4 to YouTube as `private`.
-- Move successfully uploaded tracks and batches to `success/`.
-- Run the full flow in `--dry-run` mode without external API calls.
-- Vary music and image prompts per run using internal prompt variants.
+아직 미구현:
 
-Not yet implemented:
+- 배경 이미지에 줌, 팬, 글로우, 그레인 같은 애니메이션 효과 적용
+- 재사용 가능한 실제 GIF 산출물 생성
 
-- Animated visual effects from the background image.
-- Real GIF generation as a reusable output.
-- Automatic scheduling.
-- Live YouTube upload verification in this environment. Gemini and OpenAI daily generation has been verified once.
+## 실행 위치
 
-## Main Commands
-
-Run from the implementation worktree:
+현재 구현은 worktree 브랜치에 있습니다.
 
 ```bash
 cd /Users/dglee/workspace/autoMusic/.worktrees/automusic-pipeline
 ```
 
-Install dependencies:
+## 설치
 
 ```bash
 python3 -m pip install -r requirements.txt
 ```
 
-Run one daily dry-run:
+가상환경을 사용하는 경우:
 
 ```bash
-python3 scripts/run_daily.py --config configs/examples/music.yaml --dry-run
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install -r requirements.txt
 ```
 
-Run one real daily generation:
+## 환경변수
 
-```bash
-python3 scripts/run_daily.py --config configs/examples/music.yaml
-```
+API 키와 OAuth 값은 `.env` 또는 셸 환경변수에서 읽습니다. 실제 값은 커밋하면 안 됩니다.
 
-Run separated image generation with the same config when you want image variants from `configs/examples/music.yaml`:
-
-```bash
-python3 scripts/generate_image.py workspace/tracks/<track-id> --config configs/examples/music.yaml
-```
-
-Run batch upload dry-run after 10 tracks exist:
-
-```bash
-python3 scripts/run_batch_upload.py --config configs/examples/upload.yaml --dry-run
-```
-
-Run real batch render, upload, and archive after 10 tracks exist:
-
-```bash
-python3 scripts/run_batch_upload.py --config configs/examples/upload.yaml
-```
-
-## Environment Variables
-
-Secrets are loaded from `.env` or the shell environment. They must not be committed.
-
-Required for music generation:
+음악 생성:
 
 ```bash
 GEMINI_API_KEY=
 ```
 
-Required for image generation:
+이미지 생성:
 
 ```bash
 OPENAI_API_KEY=
 ```
 
-Required for YouTube upload:
+YouTube 업로드:
 
 ```bash
 YOUTUBE_CLIENT_ID=
@@ -93,7 +70,7 @@ YOUTUBE_CLIENT_SECRET=
 YOUTUBE_REFRESH_TOKEN=
 ```
 
-Optional for Gmail notifications:
+Gmail 알림:
 
 ```bash
 SMTP_HOST=smtp.gmail.com
@@ -105,75 +82,106 @@ SMTP_TO_EMAIL=
 SMTP_USE_TLS=true
 ```
 
-Use `.env.example` as the template. Keep real values only in `.env`.
+`.env.example`을 복사해 `.env`를 만들고 실제 값을 넣습니다. `.env`는 `.gitignore`에 의해 커밋되지 않습니다.
 
-## Pipeline Flow
+## 전체 파이프라인
 
-Daily generation:
-
-```text
-configs/examples/music.yaml
-  -> scripts/run_daily.py
-  -> Lyria music generation
-  -> OpenAI background image generation
-  -> workspace/tracks/<track-id>/
+```mermaid
+flowchart TD
+    A[launchd 매일 12:00 실행] --> B[scripts/run_automation.py]
+    B --> C[scripts/run_daily.py]
+    C --> D[Lyria 음악 생성]
+    D --> E[OpenAI 이미지 생성]
+    E --> F[workspace/tracks/track-id 저장]
+    F --> G{미완료 배치 있음?}
+    G -- 예 --> H[scripts/run_batch_upload.py]
+    G -- 아니오 --> I{imaged 트랙 10개 이상?}
+    I -- 아니오 --> J[종료 후 다음 실행 대기]
+    I -- 예 --> H
+    H --> K[배치 생성 또는 재개]
+    K --> L[세그먼트 MP4 렌더링]
+    L --> M[세그먼트 concat으로 최종 video.mp4 생성]
+    M --> N[YouTube private 업로드]
+    N --> O[success/로 이동]
 ```
 
-Batch upload:
+## 주요 명령
 
-```text
-workspace/tracks/ with 10 imaged tracks
-  -> scripts/run_batch_upload.py
-  -> resume an unfinished batch first, if one exists
-  -> build batch metadata
-  -> render video.mp4 with ffmpeg
-  -> upload to YouTube as private
-  -> move completed folders to success/
+하루 생성 dry-run:
+
+```bash
+python3 scripts/run_daily.py --config configs/examples/music.yaml --dry-run
 ```
 
-Notification behavior:
+실제 하루 생성:
 
-- A live `run_daily.py` success sends a Gmail message after audio and image are both complete.
-- Batch upload success sends a Gmail message after YouTube upload and archive movement complete.
-- Batch upload failure sends a Gmail message when a batch already exists and a render, credential, upload, or archive step fails.
-- Missing SMTP settings skip notification only; they do not fail the music or upload pipeline.
+```bash
+python3 scripts/run_daily.py --config configs/examples/music.yaml
+```
 
-## Daily Automation On macOS
+이미지 생성만 별도 실행:
 
-This machine is macOS, so use `launchd` instead of `systemd timer`. `cron` can work, but `launchd` is the native scheduler and handles user LaunchAgents and logs more predictably on macOS.
+```bash
+python3 scripts/generate_image.py workspace/tracks/<track-id> --config configs/examples/music.yaml
+```
 
-Install or update the daily noon job:
+10곡 배치 dry-run:
+
+```bash
+python3 scripts/run_batch_upload.py --config configs/examples/upload.yaml --dry-run
+```
+
+실제 배치 렌더링, 업로드, 아카이브:
+
+```bash
+python3 scripts/run_batch_upload.py --config configs/examples/upload.yaml
+```
+
+## macOS 매일 정오 자동 실행
+
+현재 머신은 macOS이므로 `systemd timer` 대신 `launchd`를 사용합니다. `cron`도 가능하지만 macOS에서는 LaunchAgent와 로그 관리가 더 안정적인 `launchd`를 권장합니다.
+
+매일 낮 `12:00` 실행을 설치하거나 갱신:
 
 ```bash
 python3 scripts/install_launchd.py
 ```
 
-What gets installed:
+설치 내용:
 
-- LaunchAgent path: `~/Library/LaunchAgents/com.automusic.daily.plist`
-- Schedule: every day at `12:00` local macOS time
-- Command: `.venv/bin/python scripts/run_automation.py --project-root <project-root>`
-- Logs: `logs/launchd.out.log` and `logs/launchd.err.log`
+- LaunchAgent 경로: `~/Library/LaunchAgents/com.automusic.daily.plist`
+- 실행 시각: 매일 macOS 로컬 시간 `12:00`
+- 실행 명령: `.venv/bin/python scripts/run_automation.py --project-root <project-root>`
+- 로그 파일: `logs/launchd.out.log`, `logs/launchd.err.log`
 
-The automation command runs `run_daily.py` first. It then runs `run_batch_upload.py` only when an unfinished batch exists or at least 10 unbatched `imaged` tracks are ready.
-
-Manual checks:
+상태 확인과 수동 실행:
 
 ```bash
-launchctl list | grep com.automusic.daily
+launchctl print gui/$(id -u)/com.automusic.daily
 launchctl start com.automusic.daily
 tail -f logs/launchd.out.log logs/launchd.err.log
 ```
 
-Disable the schedule:
+스케줄 해제:
 
 ```bash
 launchctl unload ~/Library/LaunchAgents/com.automusic.daily.plist
 ```
 
-## Folder Structure
+## 폴더 구조
 
-Active work:
+```mermaid
+flowchart LR
+    A[workspace/tracks] --> B[track-id/audio.wav]
+    A --> C[track-id/image.png]
+    A --> D[track-id/track.json]
+    E[workspace/batches] --> F[batch-id/batch.json]
+    E --> G[batch-id/video.mp4]
+    H[success/tracks] --> I[업로드 완료 트랙]
+    J[success/batches] --> K[업로드 완료 배치]
+```
+
+작업 중 산출물:
 
 ```text
 workspace/
@@ -185,12 +193,13 @@ workspace/
   batches/
     <batch-id>/
       batch.json
-      audio_concat.txt
-      image_concat.txt
+      segment_000.mp4
+      segment_001.mp4
+      video_concat.txt
       video.mp4
 ```
 
-Completed work:
+업로드 성공 후 보관:
 
 ```text
 success/
@@ -205,55 +214,54 @@ success/
       video.mp4
 ```
 
-`workspace/` means pending or in-progress. `success/` means the YouTube upload succeeded and the assets were archived.
+## 상태 흐름
 
-## Track State
+트랙 상태:
 
-Each track has a `track.json` file.
-
-Typical state flow:
-
-```text
-generated -> imaged -> batched -> uploaded -> archived
+```mermaid
+stateDiagram-v2
+    [*] --> generated
+    generated --> imaged
+    imaged --> batched
+    batched --> uploaded
+    uploaded --> archived
 ```
 
-Important fields:
+배치 상태:
 
-- `track_id`: folder-safe track identifier.
-- `status`: current track status.
-- `music_prompt`: final prompt sent to music generation.
-- `image_prompt`: final prompt used for image generation.
-- `duration_seconds`: measured audio duration.
-- `audio_path`: usually `audio.wav`.
-- `image_path`: usually `image.png`.
-- `batch_id`: batch identifier after the track is selected.
-- `created_at`: creation timestamp.
-
-## Batch State
-
-Each batch has a `batch.json` file.
-
-Typical state flow:
-
-```text
-assembled -> rendered -> uploaded -> archived
+```mermaid
+stateDiagram-v2
+    [*] --> assembled
+    assembled --> rendered
+    rendered --> uploaded
+    uploaded --> archived
 ```
 
-Important fields:
+주요 트랙 필드:
 
-- `batch_id`: folder-safe batch identifier.
-- `status`: current batch status.
-- `track_ids`: the 10 tracks included in this batch.
-- `video_path`: rendered MP4 path, usually `video.mp4`.
-- `youtube_video_id`: set only after YouTube upload succeeds.
-- `archive_pending`: true after upload until archive movement completes.
-- `created_at`: batch creation timestamp.
+- `track_id`: 트랙 폴더 이름
+- `status`: 현재 상태
+- `music_prompt`: 음악 생성 최종 프롬프트
+- `image_prompt`: 이미지 생성 최종 프롬프트
+- `duration_seconds`: 실제 오디오 길이
+- `audio_path`: 보통 `audio.wav`
+- `image_path`: 보통 `image.png`
+- `batch_id`: 배치 포함 후 기록되는 배치 ID
+- `created_at`: 생성 시각
 
-Once `batch.json` is created, the selected track list is stable. Extra tracks remain in `workspace/tracks/` for the next batch.
+주요 배치 필드:
 
-## Prompts
+- `batch_id`: 배치 폴더 이름
+- `status`: 현재 상태
+- `track_ids`: 배치에 포함된 10개 트랙 ID
+- `video_path`: 보통 `video.mp4`
+- `youtube_video_id`: YouTube 업로드 성공 후 기록되는 영상 ID
+- `archive_pending`: 업로드는 됐지만 `success/` 이동이 남았는지 여부
+- `created_at`: 배치 생성 시각
 
-Music prompts are built from structured config fields:
+## 프롬프트 구조
+
+음악 프롬프트는 `configs/examples/music.yaml`의 구조화된 필드로 만듭니다.
 
 - `genre`
 - `bpm_min`
@@ -265,100 +273,126 @@ Music prompts are built from structured config fields:
 - `negative_rules`
 - `prompt_variants`
 
-The default style is Brazilian phonk for gym and workout use:
+기본 방향은 운동용 브라질리언 폰크입니다.
 
 ```text
 Brazilian phonk, aggressive workout energy, distorted 808 bass,
 driving cowbell lead, punchy drums, gritty street-gym texture.
 ```
 
-The config also includes internal variants inspired by high-energy phonk listening references. Reference song titles are not sent to the API. They are translated into safe descriptors such as accelerated baile-funk percussion, aggressive cowbell lead, dark distorted 808, rave synth pressure, loose syncopated groove, and avant-garde tension.
+설정 파일에는 고에너지 phonk 참고곡에서 착안한 내부 variant가 들어갑니다. 실제 API 프롬프트에는 참고곡 제목을 직접 넣지 않습니다.
 
-Image prompts are derived from the music metadata, but they are not a direct copy of the music prompt. The image prompt turns the sound into visual direction. Current image variants include cyberpunk gym, bodybuilder shadow, and phonk album-cover styles. All image prompts include 16:9 framing, no text, no logos, no watermark, and no real artist reference.
+이미지 프롬프트는 음악 프롬프트를 그대로 복사하지 않고, 음악 메타데이터를 시각 지시문으로 변환합니다. 현재 이미지 variant는 사이버펑크 체육관, 보디빌더 실루엣, phonk 앨범커버 계열입니다.
 
-Each new `track.json` records:
+## 렌더링
 
-- `music_variant`
-- `image_variant`
+렌더링은 `ffmpeg`를 사용합니다. 현재 방식은 각 트랙을 개별 `segment_000.mp4`, `segment_001.mp4`로 만든 뒤 `video_concat.txt`로 합쳐 최종 `video.mp4`를 만듭니다. 이 방식은 10개 트랙을 합칠 때 오디오와 비디오 스트림 길이가 어긋나는 문제를 방지합니다.
 
-## Rendering
+```mermaid
+flowchart TD
+    A[track 1 audio + image] --> B[segment_000.mp4]
+    C[track 2 audio + image] --> D[segment_001.mp4]
+    E[track 10 audio + image] --> F[segment_009.mp4]
+    B --> G[video_concat.txt]
+    D --> G
+    F --> G
+    G --> H[video.mp4]
+```
 
-Rendering uses `ffmpeg`.
+현재 한계:
 
-The current renderer:
+- 시각 트랙은 정지 이미지를 길이에 맞춰 이어붙이는 방식입니다.
+- 줌, 팬, 글로우, 그레인, GIF 느낌의 움직임은 아직 구현되지 않았습니다.
 
-- Concatenates the 10 audio files.
-- Builds an image concat file using each track image and its duration.
-- Produces `video.mp4`.
+## YouTube 업로드
 
-Current limitation:
+YouTube Data API와 OAuth refresh token을 사용합니다.
 
-- The visual track uses still images matched to durations.
-- Animated zoom, pan, glow, grain, or GIF-style motion is not implemented yet.
-
-## YouTube Upload
-
-Uploads use the YouTube Data API with OAuth refresh-token credentials.
-
-Default upload behavior:
+기본 업로드 설정:
 
 - `privacyStatus`: `private`
-- `categoryId`: `10` for music
+- `categoryId`: `10`
 - `made_for_kids`: false
 
-If `youtube_video_id` already exists in `batch.json`, upload logic treats the batch as already uploaded and avoids duplicate upload behavior where supported.
+`batch.json`에 이미 `youtube_video_id`가 있으면 중복 업로드하지 않고 아카이브 단계부터 재시도합니다.
 
-## Failure and Retry
+## Gmail 알림
 
-Daily generation failure:
+Gmail SMTP 앱 비밀번호를 설정하면 다음 시점에 메일을 보냅니다.
 
-- If music generation fails, no complete track should be used for batching.
-- If image generation fails after music succeeds, rerun image generation for that track.
+- 실제 `run_daily.py` 실행에서 음악과 이미지가 모두 완성되어 트랙이 `imaged`가 된 경우
+- 배치가 YouTube 업로드와 `success/` 이동까지 성공한 경우
+- 기존 배치가 렌더링, YouTube 인증값 확인, 업로드, 아카이브 단계에서 실패한 경우
 
-Batch build failure:
+SMTP 환경변수가 없거나 전송이 실패해도 음악 생성이나 업로드 결과는 실패로 바꾸지 않습니다.
 
-- If fewer than 10 `imaged` tracks exist, batch creation stops.
+## 실패와 재시도
 
-Render failure:
+```mermaid
+flowchart TD
+    A[run_batch_upload.py 실행] --> B{미완료 배치 있음?}
+    B -- 예 --> C[기존 배치 재개]
+    B -- 아니오 --> D{imaged 트랙 10개 이상?}
+    D -- 아니오 --> E[배치 생성 중단]
+    D -- 예 --> F[새 배치 생성]
+    C --> G{youtube_video_id 있음?}
+    F --> H[렌더링]
+    H --> I[업로드]
+    G -- 예 --> J[아카이브만 재시도]
+    G -- 아니오 --> H
+    I --> J
+    J --> K[success/ 이동]
+```
 
-- The batch remains in `workspace/batches/`.
-- Fix the issue and rerun rendering or `run_batch_upload.py`.
-- The next `run_batch_upload.py` run resumes the existing batch before creating a new one.
+하루 생성 실패:
 
-Upload failure:
+- 음악 생성이 실패하면 배치에 사용할 완성 트랙으로 보지 않습니다.
+- 음악은 성공했지만 이미지 생성이 실패하면 해당 트랙에 대해 이미지 생성만 다시 실행할 수 있습니다.
 
-- The rendered batch remains in `workspace/batches/`.
-- Retry upload after fixing credentials or API issues.
-- Tracks already selected for the batch remain `batched`, so day 11 creates a new `imaged` track but does not replace the failed 10-track batch.
+배치 생성 실패:
 
-Archive failure:
+- `imaged` 상태 트랙이 10개 미만이면 배치 생성을 멈춥니다.
 
-- The batch should retain `youtube_video_id`.
-- `archive_pending` indicates that the upload succeeded but movement to `success/` still needs to complete.
-- The next `run_batch_upload.py` run skips upload and retries archive first.
+렌더링 실패:
 
-## Cost Points
+- 배치 폴더는 `workspace/batches/`에 남습니다.
+- 문제를 해결한 뒤 `run_batch_upload.py`를 다시 실행하면 기존 배치부터 재개합니다.
 
-Costs may occur when running without `--dry-run`:
+업로드 실패:
 
-- Gemini/Lyria music generation API usage.
-- OpenAI image generation API usage.
-- YouTube API quota usage.
+- 렌더링된 배치는 `workspace/batches/`에 남습니다.
+- 인증값이나 API 문제를 고친 뒤 다시 실행하면 업로드부터 재시도합니다.
+- 기존 10개 트랙은 `batched` 상태를 유지하므로 11일차에 새 트랙이 생겨도 실패한 기존 배치부터 재시도합니다.
 
-`--dry-run` does not call external APIs and should not create API charges.
+아카이브 실패:
 
-## Safety Rules
+- 업로드가 성공했다면 `youtube_video_id`는 유지됩니다.
+- `archive_pending=true`는 업로드는 끝났지만 `success/` 이동이 남았다는 뜻입니다.
+- 다음 실행은 업로드를 건너뛰고 아카이브를 먼저 재시도합니다.
 
-Do not commit:
+## 비용 발생 지점
+
+`--dry-run` 없이 실행하면 비용이 발생할 수 있습니다.
+
+- Gemini/Lyria 음악 생성 API 사용량
+- OpenAI 이미지 생성 API 사용량
+- YouTube API quota 사용량
+
+`--dry-run`은 외부 API를 호출하지 않으므로 API 비용이 발생하지 않아야 합니다.
+
+## 보안 규칙
+
+커밋하면 안 되는 것:
 
 - `.env`
-- OAuth token JSON files
-- Google client secret JSON files
-- generated audio, images, GIFs, or videos
+- OAuth token JSON 파일
+- Google client secret JSON 파일
+- 생성된 오디오, 이미지, GIF, 영상 파일
 - `workspace/`
 - `success/`
+- `logs/`
 
-Before committing, run:
+커밋 전 확인:
 
 ```bash
 git status --short --untracked-files=all
@@ -366,30 +400,10 @@ git diff --cached --stat
 git grep --cached -n -i -E "(api[_-]?key|secret|refresh[_-]?token|access[_-]?token|client[_-]?secret|authorization:|bearer )" -- .
 ```
 
-Only placeholder names and documentation examples should appear in the scan.
-
-## Verification
-
-Run the test suite:
+## 검증 명령
 
 ```bash
 python3 -m unittest discover -s tests -v
-```
-
-Run syntax compilation:
-
-```bash
 python3 -m compileall -q src scripts tests
-```
-
-Run daily dry-run:
-
-```bash
-python3 scripts/run_daily.py --config configs/examples/music.yaml --dry-run
-```
-
-To verify batch dry-run, create 10 dry-run tracks and then run:
-
-```bash
-python3 scripts/run_batch_upload.py --config configs/examples/upload.yaml --dry-run
+python3 scripts/install_launchd.py --dry-run
 ```
