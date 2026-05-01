@@ -3,9 +3,11 @@
 __all__ = [
     "archive",
     "audio",
+    "automation",
     "batch",
     "config",
     "image",
+    "launchd",
     "music",
     "notify",
     "batch_upload",

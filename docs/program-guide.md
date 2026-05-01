@@ -138,6 +138,39 @@ Notification behavior:
 - Batch upload failure sends a Gmail message when a batch already exists and a render, credential, upload, or archive step fails.
 - Missing SMTP settings skip notification only; they do not fail the music or upload pipeline.
 
+## Daily Automation On macOS
+
+This machine is macOS, so use `launchd` instead of `systemd timer`. `cron` can work, but `launchd` is the native scheduler and handles user LaunchAgents and logs more predictably on macOS.
+
+Install or update the daily noon job:
+
+```bash
+python3 scripts/install_launchd.py
+```
+
+What gets installed:
+
+- LaunchAgent path: `~/Library/LaunchAgents/com.automusic.daily.plist`
+- Schedule: every day at `12:00` local macOS time
+- Command: `.venv/bin/python scripts/run_automation.py --project-root <project-root>`
+- Logs: `logs/launchd.out.log` and `logs/launchd.err.log`
+
+The automation command runs `run_daily.py` first. It then runs `run_batch_upload.py` only when an unfinished batch exists or at least 10 unbatched `imaged` tracks are ready.
+
+Manual checks:
+
+```bash
+launchctl list | grep com.automusic.daily
+launchctl start com.automusic.daily
+tail -f logs/launchd.out.log logs/launchd.err.log
+```
+
+Disable the schedule:
+
+```bash
+launchctl unload ~/Library/LaunchAgents/com.automusic.daily.plist
+```
+
 ## Folder Structure
 
 Active work:

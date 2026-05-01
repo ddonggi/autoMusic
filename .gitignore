@@ -40,6 +40,7 @@ success/
 data/
 outputs/
 tmp/
+logs/
 *.wav
 *.mp3
 *.m4a

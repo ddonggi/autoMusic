@@ -137,6 +137,39 @@ python3 scripts/generate_image.py workspace/tracks/<track-id> --config configs/e
 - 실제 실행은 API 비용이 발생할 수 있습니다.
 - 현재 환경에서 Gemini 음악 생성과 OpenAI 이미지 생성은 1회 실제 검증했습니다.
 
+## macOS 매일 정오 자동 실행
+
+현재 머신은 macOS이므로 `systemd timer` 대신 `launchd`를 사용합니다. `cron`도 가능하지만 macOS에서는 LaunchAgent와 로그 관리가 더 안정적인 `launchd`를 권장합니다.
+
+매일 낮 `12:00` 실행을 설치하거나 갱신:
+
+```bash
+python3 scripts/install_launchd.py
+```
+
+설치 내용:
+
+- LaunchAgent 경로: `~/Library/LaunchAgents/com.automusic.daily.plist`
+- 실행 시각: 매일 macOS 로컬 시간 `12:00`
+- 실행 명령: `.venv/bin/python scripts/run_automation.py --project-root <project-root>`
+- 로그 파일: `logs/launchd.out.log`, `logs/launchd.err.log`
+
+자동화 명령은 먼저 `run_daily.py`로 음악 1개와 이미지를 생성합니다. 이후 미완료 배치가 있거나 아직 배치되지 않은 `imaged` 트랙이 10개 이상이면 `run_batch_upload.py`를 실행합니다.
+
+상태 확인과 수동 실행:
+
+```bash
+launchctl list | grep com.automusic.daily
+launchctl start com.automusic.daily
+tail -f logs/launchd.out.log logs/launchd.err.log
+```
+
+스케줄 해제:
+
+```bash
+launchctl unload ~/Library/LaunchAgents/com.automusic.daily.plist
+```
+
 ## 10곡 배치 업로드 실행
 
 `workspace/tracks/` 아래에 `imaged` 상태의 트랙이 10개 이상 있어야 합니다.

@@ -61,6 +61,25 @@ When 10 tracks are ready, render, upload privately to YouTube, and archive:
 python3 scripts/run_batch_upload.py --config configs/examples/upload.yaml
 ```
 
+## Daily Schedule On macOS
+
+Install or update the macOS `launchd` job that runs every day at 12:00 local time:
+
+```bash
+python3 scripts/install_launchd.py
+```
+
+The job runs `scripts/run_automation.py`. It creates one daily track first, then runs batch upload only when an unfinished batch exists or 10 ready tracks are available.
+
+Useful commands:
+
+```bash
+launchctl list | grep com.automusic.daily
+launchctl start com.automusic.daily
+tail -f logs/launchd.out.log logs/launchd.err.log
+launchctl unload ~/Library/LaunchAgents/com.automusic.daily.plist
+```
+
 ## Separate Steps
 
 The pipeline can also be run step by step:
