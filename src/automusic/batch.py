@@ -45,6 +45,27 @@ def build_batch(
     return batch_path
 
 
+def find_pending_batch(batches_root: Path) -> Path | None:
+    pending: list[tuple[str, Path]] = []
+    if not batches_root.exists():
+        return None
+    for batch_json in batches_root.glob("*/batch.json"):
+        batch = load_json(batch_json)
+        status = batch.get("status")
+        has_video_id = bool(batch.get("youtube_video_id"))
+        is_pending = (
+            status in {"assembled", "rendered"}
+            or (status == "uploaded" and bool(batch.get("archive_pending")))
+            or (has_video_id and status != "archived")
+        )
+        if is_pending:
+            sort_key = str(batch.get("created_at") or batch.get("batch_id") or batch_json.parent.name)
+            pending.append((sort_key, batch_json.parent))
+    if not pending:
+        return None
+    return sorted(pending, key=lambda item: item[0])[0][1]
+
+
 def _eligible_tracks(tracks_root: Path) -> list[dict[str, Any]]:
     if not tracks_root.exists():
         return []

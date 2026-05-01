@@ -11,6 +11,9 @@ Keep these values in `.env` or your shell environment only:
 - `YOUTUBE_CLIENT_ID`
 - `YOUTUBE_CLIENT_SECRET`
 - `YOUTUBE_REFRESH_TOKEN`
+- `GMAIL_SMTP_USER`
+- `GMAIL_SMTP_APP_PASSWORD`
+- `NOTIFY_EMAIL_TO`
 
 Commit only `.env.example`, which contains empty placeholders.
 
@@ -21,6 +24,7 @@ Do not commit:
 - `.env` or `.env.*` files, except `.env.example`
 - Google OAuth client secret files such as `client_secret*.json`
 - OAuth token files such as `token*.json` or `youtube_token*.json`
+- Gmail app passwords or SMTP credential exports
 - service account credential JSON files
 - generated audio, images, GIFs, and videos
 - pipeline working folders such as `workspace/`, `success/`, `data/`, and `outputs/`

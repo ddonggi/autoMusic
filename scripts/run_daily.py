@@ -11,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from automusic.config import load_config, load_dotenv
 from automusic.image import generate_image
 from automusic.music import generate_lyria_track
+from automusic.notify import build_daily_success_notification, send_notification_safely
 from automusic.pipeline import dry_run_daily
 from automusic.prompts import build_image_prompt_with_metadata
 from automusic.state import load_json, save_json
@@ -40,6 +41,7 @@ def main() -> None:
         track["image_path"] = "image.png"
         track["status"] = "imaged"
         save_json(track_path, track)
+        send_notification_safely(build_daily_success_notification(track_dir, track))
     print(track_dir)
 
 

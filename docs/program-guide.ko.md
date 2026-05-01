@@ -75,6 +75,14 @@ YOUTUBE_CLIENT_SECRET=
 YOUTUBE_REFRESH_TOKEN=
 ```
 
+Gmail 알림에 선택적으로 필요:
+
+```bash
+GMAIL_SMTP_USER=
+GMAIL_SMTP_APP_PASSWORD=
+NOTIFY_EMAIL_TO=
+```
+
 `.env.example`을 복사해 `.env`를 만들고 실제 값을 넣으면 됩니다. `.env`는 `.gitignore`에 의해 커밋되지 않습니다.
 
 ## 가장 먼저 해볼 실행
@@ -312,6 +320,16 @@ YouTube Data API와 OAuth refresh token을 사용합니다.
 
 `batch.json`에 이미 `youtube_video_id`가 있으면 중복 업로드를 피하는 방향으로 동작합니다.
 
+## Gmail 알림
+
+Gmail SMTP 앱 비밀번호를 설정하면 다음 시점에 메일을 보냅니다.
+
+- 실제 `run_daily.py` 실행에서 음악과 이미지가 모두 완성되어 트랙이 `imaged`가 된 경우
+- 배치가 YouTube 업로드와 `success/` 이동까지 성공한 경우
+- 기존 배치가 렌더링, YouTube 인증값 확인, 업로드, 아카이브 단계에서 실패한 경우
+
+Gmail 환경변수가 없거나 SMTP 전송이 실패해도 음악 생성이나 업로드 결과는 실패로 바꾸지 않습니다.
+
 ## 실패와 재시도
 
 하루 생성 실패:
@@ -327,16 +345,19 @@ YouTube Data API와 OAuth refresh token을 사용합니다.
 
 - 배치 폴더는 `workspace/batches/`에 남습니다.
 - 문제를 해결한 뒤 렌더링 또는 `run_batch_upload.py`를 다시 실행합니다.
+- 다음 `run_batch_upload.py` 실행은 새 배치를 만들기 전에 기존 미완료 배치를 먼저 재개합니다.
 
 업로드 실패:
 
 - 렌더링된 배치는 `workspace/batches/`에 남습니다.
 - 인증값이나 API 문제를 고친 뒤 업로드를 다시 시도합니다.
+- 기존 10개 트랙은 `batched` 상태를 유지하므로 11일차에 새 트랙이 생겨도 실패한 기존 배치부터 재시도합니다.
 
 아카이브 실패:
 
 - 업로드가 성공했다면 `youtube_video_id`는 유지되어야 합니다.
 - `archive_pending=true`는 업로드는 끝났지만 `success/` 이동이 남았다는 뜻입니다.
+- 다음 `run_batch_upload.py` 실행은 업로드를 건너뛰고 아카이브를 먼저 재시도합니다.
 
 ## 비용 발생 지점
 

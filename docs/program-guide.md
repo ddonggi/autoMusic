@@ -93,6 +93,14 @@ YOUTUBE_CLIENT_SECRET=
 YOUTUBE_REFRESH_TOKEN=
 ```
 
+Optional for Gmail notifications:
+
+```bash
+GMAIL_SMTP_USER=
+GMAIL_SMTP_APP_PASSWORD=
+NOTIFY_EMAIL_TO=
+```
+
 Use `.env.example` as the template. Keep real values only in `.env`.
 
 ## Pipeline Flow
@@ -112,11 +120,19 @@ Batch upload:
 ```text
 workspace/tracks/ with 10 imaged tracks
   -> scripts/run_batch_upload.py
+  -> resume an unfinished batch first, if one exists
   -> build batch metadata
   -> render video.mp4 with ffmpeg
   -> upload to YouTube as private
   -> move completed folders to success/
 ```
+
+Notification behavior:
+
+- A live `run_daily.py` success sends a Gmail message after audio and image are both complete.
+- Batch upload success sends a Gmail message after YouTube upload and archive movement complete.
+- Batch upload failure sends a Gmail message when a batch already exists and a render, credential, upload, or archive step fails.
+- Missing Gmail SMTP settings skip notification only; they do not fail the music or upload pipeline.
 
 ## Folder Structure
 
@@ -270,16 +286,19 @@ Render failure:
 
 - The batch remains in `workspace/batches/`.
 - Fix the issue and rerun rendering or `run_batch_upload.py`.
+- The next `run_batch_upload.py` run resumes the existing batch before creating a new one.
 
 Upload failure:
 
 - The rendered batch remains in `workspace/batches/`.
 - Retry upload after fixing credentials or API issues.
+- Tracks already selected for the batch remain `batched`, so day 11 creates a new `imaged` track but does not replace the failed 10-track batch.
 
 Archive failure:
 
 - The batch should retain `youtube_video_id`.
 - `archive_pending` indicates that the upload succeeded but movement to `success/` still needs to complete.
+- The next `run_batch_upload.py` run skips upload and retries archive first.
 
 ## Cost Points
 
