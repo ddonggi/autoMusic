@@ -11,6 +11,15 @@ DEFAULT_MUSIC_VARIANT = {
     "texture": [],
 }
 
+DEFAULT_MUSIC_ARRANGEMENT = [
+    "0:00-0:15 Intro: filtered cowbell motif, sub bass tension, and restrained kick hints",
+    "0:15-0:45 Build: introduce the main drum groove, sharper cowbell phrases, and rising saturation",
+    "0:45-1:20 First drop: full 808 bass, hard kick, and the clearest workout hook",
+    "1:20-1:45 Breakdown: strip back the drums, leave atmospheric bass pulses, then rebuild pressure",
+    "1:45-2:35 Climax: denser percussion, stronger low-end movement, and the highest energy section",
+    "2:35-3:00 Outro: reduce layers while keeping momentum, ending cleanly without a sudden cutoff",
+]
+
 DEFAULT_IMAGE_VARIANTS = [
     {
         "name": "cyberpunk-gym",
@@ -53,6 +62,8 @@ def build_music_prompt_with_metadata(config: dict[str, Any]) -> dict[str, Any]:
     mood = _join(mood_values)
     instruments = _join(instrument_values)
     texture = _join(texture_values)
+    arrangement_values = _arrangement_values(variant.get("arrangement") or config.get("arrangement"))
+    arrangement = _format_arrangement(arrangement_values)
     vocals = str(config.get("vocals", "none")).lower()
     negative_rules = _join(config.get("negative_rules", []))
 
@@ -68,7 +79,8 @@ def build_music_prompt_with_metadata(config: dict[str, Any]) -> dict[str, Any]:
         f"Use {instruments}." if instruments else "",
         f"Texture: {texture}." if texture else "",
         vocal_text + ".",
-        "Keep high energy throughout with clean structure for looping.",
+        "Structure the track as a complete song, not a static loop.",
+        arrangement,
         f"Rules: {negative_rules}." if negative_rules else "",
     ]
     prompt = " ".join(part for part in parts if part).strip()
@@ -79,6 +91,7 @@ def build_music_prompt_with_metadata(config: dict[str, Any]) -> dict[str, Any]:
         "mood": mood_values,
         "instruments": instrument_values,
         "texture": texture_values,
+        "arrangement": arrangement_values,
     }
 
 
@@ -144,6 +157,20 @@ def _as_list(value: Any) -> list[Any]:
     if isinstance(value, tuple):
         return list(value)
     return [value]
+
+
+def _arrangement_values(value: Any) -> list[str]:
+    values = [str(item).strip() for item in _as_list(value or DEFAULT_MUSIC_ARRANGEMENT)]
+    return [item for item in values if item]
+
+
+def _format_arrangement(values: list[str]) -> str:
+    timeline = " ".join(_with_period(value) for value in values)
+    return f"Arrangement timeline: {timeline}" if timeline else ""
+
+
+def _with_period(value: str) -> str:
+    return value if value.endswith((".", "!", "?")) else value + "."
 
 
 def _numeric_bpm(bpm_min: Any, bpm_max: Any) -> int | None:

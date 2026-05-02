@@ -82,6 +82,65 @@ class PromptTests(unittest.TestCase):
         self.assertIn("fast baile-funk percussion", first["prompt"])
         self.assertIn("street-rave pressure", first["prompt"])
 
+    def test_build_music_prompt_includes_variant_arrangement_timeline(self):
+        config = {
+            "duration_seconds": 180,
+            "genre": "Brazilian phonk",
+            "seed": 4,
+            "prompt_variants": [
+                {
+                    "name": "accelerated-baile",
+                    "bpm_min": 138,
+                    "bpm_max": 144,
+                    "mood": ["accelerated", "explosive"],
+                    "instruments": ["fast baile-funk percussion", "sharp cowbell patterns"],
+                    "texture": ["street-rave pressure"],
+                    "arrangement": [
+                        "0:00-0:12 Intro: filtered cowbell teaser with low sub tension",
+                        "0:12-0:38 Build: add fast baile percussion and snare rolls",
+                        "0:38-1:12 First drop: full distorted 808 and aggressive cowbell hook",
+                        "1:12-1:35 Breakdown: strip drums while keeping bass pulses",
+                        "1:35-2:35 Climax: denser percussion and harder kick pressure",
+                        "2:35-3:00 Outro: controlled wind-down with no abrupt ending",
+                    ],
+                }
+            ],
+        }
+
+        result = build_music_prompt_with_metadata(config)
+        prompt = result["prompt"]
+
+        self.assertIn("Structure the track as a complete song, not a static loop.", prompt)
+        self.assertIn("Arrangement timeline:", prompt)
+        self.assertIn("0:00-0:12 Intro: filtered cowbell teaser", prompt)
+        self.assertIn("1:35-2:35 Climax: denser percussion", prompt)
+        self.assertIn("2:35-3:00 Outro: controlled wind-down", prompt)
+
+    def test_build_music_prompt_uses_default_arrangement_when_variant_has_none(self):
+        config = {
+            "duration_seconds": 180,
+            "genre": "Brazilian phonk",
+            "seed": 0,
+            "prompt_variants": [
+                {
+                    "name": "minimal-variant",
+                    "mood": ["focused"],
+                    "instruments": ["distorted 808 bass"],
+                    "texture": ["gritty saturation"],
+                }
+            ],
+        }
+
+        prompt = build_music_prompt(config)
+
+        self.assertIn("Arrangement timeline:", prompt)
+        self.assertIn("0:00-0:15 Intro:", prompt)
+        self.assertIn("0:15-0:45 Build:", prompt)
+        self.assertIn("0:45-1:20 First drop:", prompt)
+        self.assertIn("1:20-1:45 Breakdown:", prompt)
+        self.assertIn("1:45-2:35 Climax:", prompt)
+        self.assertIn("2:35-3:00 Outro:", prompt)
+
     def test_music_prompt_does_not_include_reference_song_titles(self):
         config = {
             "duration_seconds": 180,

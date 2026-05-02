@@ -22,6 +22,9 @@ negative_rules:
   - no copyrighted song references
   - no long silence
   - no abrupt ending
+  - avoid static one-loop repetition
+  - include clear section changes
+  - make the track feel like a complete song arrangement
 prompt_variants:
   - name: rugged-cowbell
     bpm_min: 132
@@ -37,6 +40,13 @@ prompt_variants:
     texture:
       - rough concrete gym grit
       - saturated low-end impact
+    arrangement:
+      - "0:00-0:18 Intro: dry cowbell riff, distant kick hits, and low sub tension"
+      - "0:18-0:48 Build: layer rugged percussion, heavier kick accents, and rising distortion"
+      - "0:48-1:22 First drop: full raspy cowbell hook with distorted 808 bass punches"
+      - "1:22-1:43 Breakdown: remove the main kick, leave concrete-room ambience and bass pulses"
+      - "1:43-2:36 Climax: bring back harder drums, thicker bass punches, and wider cowbell response"
+      - "2:36-3:00 Outro: reduce layers step by step while keeping a clean final hit"
   - name: accelerated-baile
     bpm_min: 138
     bpm_max: 144
@@ -51,6 +61,13 @@ prompt_variants:
     texture:
       - street-rave pressure
       - clipped transient energy
+    arrangement:
+      - "0:00-0:10 Intro: quick filtered cowbell teaser and sub-bass riser"
+      - "0:10-0:34 Build: fast baile percussion enters with tight snare rolls"
+      - "0:34-1:05 First drop: sharp cowbell pattern, distorted 808 drive, and sprint energy"
+      - "1:05-1:28 Switch: cut the bass briefly, expose percussion fills, then reload tension"
+      - "1:28-2:38 Second drop: denser baile groove with more aggressive kick and cowbell answers"
+      - "2:38-3:00 Outro: controlled deceleration with percussion echoes and no abrupt ending"
   - name: loose-step
     bpm_min: 128
     bpm_max: 134
@@ -65,6 +82,13 @@ prompt_variants:
     texture:
       - sweaty gym floor bounce
       - elastic groove movement
+    arrangement:
+      - "0:00-0:16 Intro: playful cowbell phrase over a restrained rolling 808"
+      - "0:16-0:46 Groove build: add syncopated percussion and a swaggering kick pocket"
+      - "0:46-1:18 First drop: loose-step bounce with playful cowbell variations"
+      - "1:18-1:48 Swing break: pull back the kick and emphasize elastic percussion movement"
+      - "1:48-2:32 Climax: return with wider bass slides, stronger snare hits, and confident groove"
+      - "2:32-3:00 Outro: simplify the bounce and end with a clean gym-floor tail"
   - name: tomada-drive
     bpm_min: 134
     bpm_max: 140
@@ -79,6 +103,13 @@ prompt_variants:
     texture:
       - forward momentum
       - metallic distortion edge
+    arrangement:
+      - "0:00-0:14 Intro: tense cowbell hook filtered through metallic distortion"
+      - "0:14-0:42 Tension build: pounding kick pattern grows with compressed sub pulses"
+      - "0:42-1:20 Main drive: relentless full groove with hard low-end momentum"
+      - "1:20-1:40 Breakdown: mute the kick, keep the tense hook, and build pressure again"
+      - "1:40-2:40 Climax drive: heavier kick hits, thicker sub bass, and tighter cowbell repetition"
+      - "2:40-3:00 Outro: short final drive section that resolves instead of cutting off"
   - name: slay-energy
     bpm_min: 132
     bpm_max: 138
@@ -93,6 +124,13 @@ prompt_variants:
     texture:
       - glossy gym intensity
       - clean saturated loudness
+    arrangement:
+      - "0:00-0:12 Intro: polished cowbell tag with crisp drum previews"
+      - "0:12-0:40 Build: add club drums, 808 slide hints, and a clean rising transition"
+      - "0:40-1:16 Drop: confident high-impact groove with polished cowbell lead"
+      - "1:16-1:38 Minimal break: strip to bass slides and tight snare accents"
+      - "1:38-2:34 Climax: brighter cowbell answers, harder kick pressure, and glossy loudness"
+      - "2:34-3:00 Outro: reduce the hook in clean layers and finish with a strong final accent"
   - name: pr-funk-pressure
     bpm_min: 136
     bpm_max: 142
@@ -107,6 +145,13 @@ prompt_variants:
     texture:
       - low-end pressure
       - crowded street workout atmosphere
+    arrangement:
+      - "0:00-0:13 Intro: dense percussion tease with low-end pressure underneath"
+      - "0:13-0:37 Build: stack baile percussion and aggressive cowbell accents"
+      - "0:37-1:10 First pressure drop: heavy sub drops and competitive peak-set rhythm"
+      - "1:10-1:34 Percussion break: remove the sub, let dense drums answer each other"
+      - "1:34-2:40 Peak-set climax: bigger sub drops, harder cowbell accents, and crowded street energy"
+      - "2:40-3:00 Outro: drain the low end gradually while keeping the final rhythm controlled"
   - name: dark-mind
     bpm_min: 130
     bpm_max: 136
@@ -121,6 +166,13 @@ prompt_variants:
     texture:
       - shadowy low-end pressure
       - cold saturated air
+    arrangement:
+      - "0:00-0:20 Shadow intro: minimal cowbell motif, cold air, and distant 808 rumble"
+      - "0:20-0:52 Pressure build: add hard snare hits and darker bass movement"
+      - "0:52-1:24 First drop: menacing distorted 808 with restrained cowbell repetition"
+      - "1:24-1:52 Dark breakdown: nearly empty drums, bass pulses, and shadowy atmosphere"
+      - "1:52-2:38 Final drop: heavier snare hits, wider sub pressure, and focused aggression"
+      - "2:38-3:00 Outro: fade the menace into a clean ending without long silence"
   - name: rave-metamorphosis
     bpm_min: 138
     bpm_max: 145
@@ -135,6 +187,13 @@ prompt_variants:
     texture:
       - neon club compression
       - evolving filter movement
+    arrangement:
+      - "0:00-0:16 Intro: filtered rave synth pressure and distant phonk cowbell"
+      - "0:16-0:48 Filter build: increase synth brightness, drum density, and 808 movement"
+      - "0:48-1:18 First drop: phonk cowbell lead over distorted 808 drive"
+      - "1:18-1:44 Transformation break: pull back drums and morph the synth filter upward"
+      - "1:44-2:42 Climax: euphoric rave pressure, wider cowbell hook, and maximum low-end drive"
+      - "2:42-3:00 Outro: release the filter energy and land on a clean final pulse"
   - name: avant-garde-phonk
     bpm_min: 126
     bpm_max: 134
@@ -149,6 +208,13 @@ prompt_variants:
     texture:
       - avant-garde tension
       - gritty digital artifacts
+    arrangement:
+      - "0:00-0:18 Fragmented intro: off-grid cowbell pieces and warped sub bass hints"
+      - "0:18-0:46 Asymmetric build: angular percussion appears in short unpredictable bursts"
+      - "0:46-1:16 Off-grid drop: gritty 808 pressure with fractured cowbell responses"
+      - "1:16-1:48 Deconstruction: remove the main groove and expose digital artifacts"
+      - "1:48-2:32 Abstract climax: rebuild with sharper fragments, heavier sub bass, and tense percussion"
+      - "2:32-3:00 Outro: collapse the fragments into a deliberate clean ending"
 image_variants:
   - name: cyberpunk-gym
     visual_style: cyberpunk gym scene

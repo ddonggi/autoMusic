@@ -272,6 +272,7 @@ stateDiagram-v2
 - `vocals`
 - `negative_rules`
 - `prompt_variants`
+- `prompt_variants[].arrangement`
 
 기본 방향은 운동용 브라질리언 폰크입니다.
 
@@ -281,6 +282,33 @@ driving cowbell lead, punchy drums, gritty street-gym texture.
 ```
 
 설정 파일에는 고에너지 phonk 참고곡에서 착안한 내부 variant가 들어갑니다. 실제 API 프롬프트에는 참고곡 제목을 직접 넣지 않습니다.
+
+각 음악 variant는 BPM, 분위기, 악기, 질감뿐 아니라 3분짜리 곡의 전개 구조도 함께 가집니다. `arrangement`가 있으면 해당 variant 전용 타임라인을 쓰고, 없으면 기본 타임라인을 자동으로 넣습니다.
+
+```mermaid
+flowchart LR
+    A[0:00-0:15 Intro] --> B[0:15-0:45 Build]
+    B --> C[0:45-1:20 First drop]
+    C --> D[1:20-1:45 Breakdown]
+    D --> E[1:45-2:35 Climax]
+    E --> F[2:35-3:00 Outro]
+```
+
+예시:
+
+```yaml
+prompt_variants:
+  - name: accelerated-baile
+    bpm_min: 138
+    bpm_max: 144
+    arrangement:
+      - "0:00-0:10 Intro: quick filtered cowbell teaser and sub-bass riser"
+      - "0:10-0:34 Build: fast baile percussion enters with tight snare rolls"
+      - "0:34-1:05 First drop: sharp cowbell pattern, distorted 808 drive, and sprint energy"
+      - "1:05-1:28 Switch: cut the bass briefly, expose percussion fills, then reload tension"
+      - "1:28-2:38 Second drop: denser baile groove with more aggressive kick and cowbell answers"
+      - "2:38-3:00 Outro: controlled deceleration with percussion echoes and no abrupt ending"
+```
 
 이미지 프롬프트는 음악 프롬프트를 그대로 복사하지 않고, 음악 메타데이터를 시각 지시문으로 변환합니다. 현재 이미지 variant는 사이버펑크 체육관, 보디빌더 실루엣, phonk 앨범커버 계열입니다.
 
