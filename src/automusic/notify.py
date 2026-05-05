@@ -57,6 +57,25 @@ def build_daily_success_notification(track_dir: Path, track: dict) -> Notificati
     )
 
 
+def build_daily_failure_notification(
+    *,
+    stage: str,
+    error: BaseException,
+    track_dir: Path | None = None,
+) -> Notification:
+    track_path = str(track_dir) if track_dir is not None else "not created"
+    return Notification(
+        subject=f"[AutoMusic] 음악 생성 실패: {stage}",
+        body=(
+            "일일 음악 생성 파이프라인이 실패했습니다.\n\n"
+            f"Failed Stage: {stage}\n"
+            f"Track Path: {track_path}\n"
+            f"Error: {error}\n\n"
+            "문제를 해결한 뒤 수동 실행하거나 다음 스케줄 실행에서 다시 시도합니다.\n"
+        ),
+    )
+
+
 def send_gmail_notification(
     notification: Notification,
     *,

@@ -1,31 +1,72 @@
 from __future__ import annotations
 
 import asyncio
+import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Awaitable, Callable
 from zoneinfo import ZoneInfo
 
 from .audio import write_pcm16_wav
 from .prompts import build_music_prompt_with_metadata
 from .state import save_json
 
+MusicChunkProducer = Callable[[str, dict[str, Any], dict[str, Any], int], Awaitable[list[bytes]]]
+
 
 def make_track_id(now: datetime, slug: str = "brazilian-phonk") -> str:
     return f"{now:%Y%m%d-%H%M%S}-{slug}"
 
 
-async def generate_lyria_track(config: dict[str, Any], workspace_tracks: Path) -> Path:
-    from google import genai
-    from google.genai import types
-
+async def generate_lyria_track(
+    config: dict[str, Any],
+    workspace_tracks: Path,
+    *,
+    music_chunk_producer: MusicChunkProducer | None = None,
+) -> Path:
     now = datetime.now(ZoneInfo("Asia/Seoul"))
-    track_id = make_track_id(now)
-    track_dir = _make_unique_dir(workspace_tracks, track_id)
-    track_id = track_dir.name
+    base_track_id = make_track_id(now)
     music_result = build_music_prompt_with_metadata(config)
     prompt = str(music_result["prompt"])
     target_seconds = int(config.get("duration_seconds", 180))
+    producer = music_chunk_producer or _generate_lyria_pcm_chunks
+    pcm_chunks = await _produce_music_with_retries(producer, prompt, config, music_result, target_seconds)
+
+    track_dir = _make_unique_dir(workspace_tracks, base_track_id)
+    track_id = track_dir.name
+    audio_path = track_dir / "audio.wav"
+    duration_seconds = write_pcm16_wav(pcm_chunks, audio_path)
+    save_json(
+        track_dir / "track.json",
+        {
+            "track_id": track_id,
+            "status": "generated",
+            "genre": config.get("genre", "Brazilian phonk"),
+            "mood": music_result["mood"],
+            "texture": music_result["texture"],
+            "music_variant": music_result["music_variant"],
+            "image_variant": None,
+            "music_prompt": prompt,
+            "image_prompt": None,
+            "duration_seconds": duration_seconds,
+            "audio_path": "audio.wav",
+            "image_path": None,
+            "batch_id": None,
+            "created_at": now.isoformat(),
+        },
+    )
+    return track_dir
+
+
+async def _generate_lyria_pcm_chunks(
+    prompt: str,
+    config: dict[str, Any],
+    music_result: dict[str, Any],
+    target_seconds: int,
+) -> list[bytes]:
+    from google import genai
+    from google.genai import types
+
     client = genai.Client(http_options={"api_version": "v1alpha"})
     pcm_chunks: list[bytes] = []
 
@@ -49,29 +90,46 @@ async def generate_lyria_track(config: dict[str, Any], workspace_tracks: Path) -
                 await session.stop()
                 break
             await asyncio.sleep(0)
+    return pcm_chunks
 
-    audio_path = track_dir / "audio.wav"
-    duration_seconds = write_pcm16_wav(pcm_chunks, audio_path)
-    save_json(
-        track_dir / "track.json",
-        {
-            "track_id": track_id,
-            "status": "generated",
-            "genre": config.get("genre", "Brazilian phonk"),
-            "mood": music_result["mood"],
-            "texture": music_result["texture"],
-            "music_variant": music_result["music_variant"],
-            "image_variant": None,
-            "music_prompt": prompt,
-            "image_prompt": None,
-            "duration_seconds": duration_seconds,
-            "audio_path": "audio.wav",
-            "image_path": None,
-            "batch_id": None,
-            "created_at": now.isoformat(),
-        },
-    )
-    return track_dir
+
+async def _produce_music_with_retries(
+    producer: MusicChunkProducer,
+    prompt: str,
+    config: dict[str, Any],
+    music_result: dict[str, Any],
+    target_seconds: int,
+) -> list[bytes]:
+    max_attempts = max(1, int(config.get("lyria_retries", 3)))
+    delay_seconds = max(0.0, float(config.get("lyria_retry_delay_seconds", 30)))
+    for attempt in range(1, max_attempts + 1):
+        try:
+            return await producer(prompt, config, music_result, target_seconds)
+        except Exception as exc:
+            if attempt >= max_attempts or not _is_retryable_music_error(exc):
+                raise
+            print(
+                f"Lyria generation failed on attempt {attempt}/{max_attempts}: {exc}. Retrying...",
+                file=sys.stderr,
+            )
+            if delay_seconds:
+                await asyncio.sleep(delay_seconds)
+    raise RuntimeError("Lyria generation failed without returning audio")
+
+
+def _is_retryable_music_error(error: BaseException) -> bool:
+    text = f"{type(error).__name__}: {error}".lower()
+    retryable_markers = [
+        "1006",
+        "abnormal closure",
+        "connection reset",
+        "connectionclosed",
+        "timeout",
+        "temporarily unavailable",
+        "unavailable",
+        "503",
+    ]
+    return any(marker in text for marker in retryable_markers)
 
 
 def _make_unique_dir(root: Path, base_name: str) -> Path:

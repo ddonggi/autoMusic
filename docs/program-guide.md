@@ -270,6 +270,9 @@ stateDiagram-v2
 - `instruments`
 - `texture`
 - `vocals`
+- `temperature`
+- `lyria_retries`
+- `lyria_retry_delay_seconds`
 - `negative_rules`
 - `prompt_variants`
 - `prompt_variants[].arrangement`
@@ -349,6 +352,7 @@ YouTube Data API와 OAuth refresh token을 사용합니다.
 Gmail SMTP 앱 비밀번호를 설정하면 다음 시점에 메일을 보냅니다.
 
 - 실제 `run_daily.py` 실행에서 음악과 이미지가 모두 완성되어 트랙이 `imaged`가 된 경우
+- 실제 `run_daily.py` 실행에서 음악 생성 또는 이미지 생성이 실패한 경우
 - 배치가 YouTube 업로드와 `success/` 이동까지 성공한 경우
 - 기존 배치가 렌더링, YouTube 인증값 확인, 업로드, 아카이브 단계에서 실패한 경우
 
@@ -374,8 +378,12 @@ flowchart TD
 
 하루 생성 실패:
 
-- 음악 생성이 실패하면 배치에 사용할 완성 트랙으로 보지 않습니다.
+- Lyria 음악 생성 중 `1006 abnormal closure`, connection reset, timeout 같은 일시적 오류가 나면 `lyria_retries` 횟수만큼 재시도합니다.
+- 기본 예시는 3회 재시도, 재시도 간격 30초입니다.
+- 음악 생성이 최종 실패하면 트랙 폴더를 만들지 않으므로 새 빈 폴더가 남지 않습니다.
+- 실패 메일에는 `music_generation` 또는 `image_generation` 단계와 오류 메시지가 포함됩니다.
 - 음악은 성공했지만 이미지 생성이 실패하면 해당 트랙에 대해 이미지 생성만 다시 실행할 수 있습니다.
+- 과거 버전에서 만들어진 빈 트랙 폴더는 상태 파일이 없으므로 배치 대상에 포함되지 않습니다. 필요하면 `workspace/tracks/YYYY...` 빈 폴더를 직접 삭제해도 됩니다.
 
 배치 생성 실패:
 

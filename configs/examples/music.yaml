@@ -17,6 +17,8 @@ texture:
   - wide low-end
 vocals: none
 temperature: 1.1
+lyria_retries: 3
+lyria_retry_delay_seconds: 30
 negative_rules:
   - no artist-name imitation
   - no copyrighted song references

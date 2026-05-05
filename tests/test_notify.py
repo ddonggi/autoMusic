@@ -8,6 +8,7 @@ from automusic.notify import (
     Notification,
     build_batch_failure_notification,
     build_batch_success_notification,
+    build_daily_failure_notification,
     build_daily_success_notification,
     send_gmail_notification,
 )
@@ -54,6 +55,18 @@ class NotifyTests(unittest.TestCase):
         self.assertIn("180.0", message.body)
         self.assertIn("rave-metamorphosis", message.body)
         self.assertIn("cyberpunk-gym", message.body)
+
+    def test_build_daily_failure_notification_includes_stage_and_error(self):
+        message = build_daily_failure_notification(
+            stage="music_generation",
+            error=RuntimeError("1006 abnormal closure [internal]"),
+            track_dir=Path("workspace/tracks/track-001"),
+        )
+
+        self.assertIn("음악 생성 실패", message.subject)
+        self.assertIn("music_generation", message.body)
+        self.assertIn("1006 abnormal closure", message.body)
+        self.assertIn("workspace/tracks/track-001", message.body)
 
     def test_send_gmail_notification_returns_false_when_config_missing(self):
         sent = send_gmail_notification(Notification("subject", "body"), env={})
