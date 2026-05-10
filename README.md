@@ -64,6 +64,8 @@ SMTP_USE_TLS=true
 
 SMTP 설정은 선택입니다. 설정하면 실제 하루 생성 성공/실패, 배치 업로드 성공/실패 시 Gmail 알림을 받습니다.
 
+YouTube 업로드 대상 채널은 `YOUTUBE_REFRESH_TOKEN`이 발급된 채널로 결정됩니다. 한 계정에 채널이 여러 개라면 [프로그램 가이드 - YouTube 업로드](docs/program-guide.md#youtube-업로드)를 기준으로 원하는 채널의 OAuth token을 발급해 사용합니다.
+
 ## 드라이런
 
 외부 API 호출 없이 테스트용 음악 1개와 이미지를 만듭니다.

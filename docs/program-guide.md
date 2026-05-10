@@ -70,6 +70,15 @@ YOUTUBE_CLIENT_SECRET=
 YOUTUBE_REFRESH_TOKEN=
 ```
 
+YouTube 업로드는 API key가 아니라 OAuth refresh token을 사용합니다. Google Cloud Console에서는 다음 위치를 확인합니다.
+
+| 확인 항목 | Google Cloud Console 위치 |
+| --- | --- |
+| YouTube Data API v3 활성화 | `APIs & Services` > `Enabled APIs & services` |
+| OAuth Client ID/Secret | `APIs & Services` > `Credentials` |
+| quota 사용량과 제한 | `APIs & Services` > `YouTube Data API v3` > `Quotas & System Limits` |
+| API 요청 통계 | `APIs & Services` > `YouTube Data API v3` > `Metrics` |
+
 Gmail 알림:
 
 ```bash
@@ -338,6 +347,41 @@ flowchart TD
 ## YouTube 업로드
 
 YouTube Data API와 OAuth refresh token을 사용합니다.
+
+업로드 대상 채널은 코드의 `channelId` 설정으로 정하는 것이 아니라, `YOUTUBE_REFRESH_TOKEN`이 발급된 YouTube 채널로 결정됩니다. 한 Google 계정에 여러 YouTube 채널 또는 브랜드 채널이 있으면 OAuth 인증 과정에서 업로드할 채널을 선택하고, 그 채널에 대해 발급된 refresh token을 `.env`에 넣어야 합니다.
+
+```mermaid
+flowchart TD
+    A[Google 계정 로그인] --> B{업로드할 YouTube 채널 선택}
+    B --> C[OAuth 동의]
+    C --> D[YOUTUBE_REFRESH_TOKEN 발급]
+    D --> E[.env에 저장]
+    E --> F[videos.insert 업로드]
+    F --> G[선택한 채널에 영상 등록]
+```
+
+원하는 채널인지 확인하는 방법:
+
+1. OAuth 토큰을 발급할 때 브라우저에서 원하는 YouTube 채널을 선택합니다.
+2. 발급된 `YOUTUBE_REFRESH_TOKEN`을 `.env`에 넣습니다.
+3. 업로드 전 확인이 필요하면 YouTube Data API `channels.list`를 `mine=true`로 호출해 인증된 토큰이 가리키는 채널 ID와 채널명을 확인합니다.
+4. 다른 채널로 바꾸려면 같은 OAuth client를 사용해도 되지만, 원하는 채널을 선택해서 refresh token을 다시 발급해야 합니다.
+
+현재 코드에서 사용하는 값:
+
+| 환경변수 | 용도 |
+| --- | --- |
+| `YOUTUBE_CLIENT_ID` | Google Cloud OAuth client 식별자 |
+| `YOUTUBE_CLIENT_SECRET` | OAuth client secret |
+| `YOUTUBE_REFRESH_TOKEN` | 실제 업로드 채널 권한을 가진 refresh token |
+
+현재 코드에서 사용하는 API:
+
+| API | 용도 |
+| --- | --- |
+| OAuth token endpoint `https://oauth2.googleapis.com/token` | refresh token으로 access token 갱신 |
+| YouTube Data API v3 `videos.insert` | 렌더링된 MP4를 YouTube에 업로드 |
+| YouTube Data API v3 `channels.list?mine=true` | 업로드 전 토큰이 연결된 채널 확인용. 현재 자동 업로드 코드에는 아직 내장되어 있지 않음 |
 
 기본 업로드 설정:
 
