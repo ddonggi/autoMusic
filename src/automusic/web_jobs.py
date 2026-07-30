@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from pathlib import Path
 from typing import Any, Callable
 from uuid import UUID, uuid4
 
-from .prompts import build_image_prompt_with_metadata, build_music_prompt
+from .prompts import build_image_prompt_with_metadata, build_music_prompt, build_music_prompt_with_metadata
 from .state import load_json, save_json
 
 
@@ -47,17 +48,20 @@ class WebJobService:
     def start(self, preset_id: str, music_prompt: str | None) -> dict[str, Any]:
         if preset_id not in self.presets:
             raise ValueError("Unknown preset")
+        preset = self.presets[preset_id]
+        normalized_prompt = music_prompt.strip() if music_prompt is not None else ""
+        effective_prompt = normalized_prompt or str(build_music_prompt_with_metadata(preset)["prompt"])
         job_id = str(uuid4())
         job_dir = self._job_dir(job_id)
         job = {
             "id": job_id,
             "preset_id": preset_id,
-            "music_prompt": music_prompt or "",
+            "music_prompt": effective_prompt,
             "status": "queued",
             "error": None,
             "artifacts": {},
         }
-        save_json(job_dir / "job.json", job)
+        self._save_job(job_dir, job)
         self.executor.submit(self._run, job_id)
         return self.get(job_id)
 
@@ -124,11 +128,19 @@ class WebJobService:
     ) -> None:
         job["status"] = status
         job["error"] = error
-        save_json(job_dir / "job.json", job)
+        self._save_job(job_dir, job)
 
     def _set_artifact(self, job_dir: Path, job: dict[str, Any], asset: str, path: Path) -> None:
         job["artifacts"][asset] = str(path.resolve().relative_to(job_dir.resolve()))
-        save_json(job_dir / "job.json", job)
+        self._save_job(job_dir, job)
+
+    @staticmethod
+    def _save_job(job_dir: Path, job: dict[str, Any]) -> None:
+        path = job_dir / "job.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary_path = path.with_name(f".{path.name}.{uuid4().hex}.tmp")
+        temporary_path.write_text(json.dumps(job, indent=2, ensure_ascii=False, sort_keys=True) + "\n")
+        temporary_path.replace(path)
 
     def _job_dir(self, job_id: str) -> Path:
         if str(UUID(job_id)) != job_id:
