@@ -24,7 +24,9 @@ negative_rules:
   - no long silence
   - no abrupt ending
   - no vocals
+  - no lead vocals
   - avoid static one-loop repetition
+  - include subtle section changes
   - use gentle section changes for sustained concentration
   - no sudden volume changes
   - no harsh percussion or distracting rhythmic hooks

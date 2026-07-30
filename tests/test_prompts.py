@@ -46,6 +46,7 @@ class PromptTests(unittest.TestCase):
         )
 
         self.assertEqual(config["genre"], "Study focus ambient")
+        self.assertEqual(config["duration_seconds"], 180)
         self.assertEqual(config["music_context"], "deep study and concentration sessions")
         self.assertEqual(config["image_context"], "study focus music video")
         self.assertEqual(config["vocals"], "none")
@@ -58,8 +59,9 @@ class PromptTests(unittest.TestCase):
                 "no aggressive drums or sudden drops",
                 "no long silence",
                 "no abrupt ending",
-                "no vocals",
+                "no lead vocals",
                 "avoid static one-loop repetition",
+                "include subtle section changes",
             }.issubset(config["negative_rules"])
         )
         self.assertEqual(
