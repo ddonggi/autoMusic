@@ -28,7 +28,8 @@ async def generate_lyria_track(
     now = datetime.now(ZoneInfo("Asia/Seoul"))
     base_track_id = make_track_id(now)
     music_result = build_music_prompt_with_metadata(config)
-    prompt = music_prompt if music_prompt and music_prompt.strip() else str(music_result["prompt"])
+    normalized_music_prompt = music_prompt.strip() if music_prompt is not None else ""
+    prompt = normalized_music_prompt or str(music_result["prompt"])
     target_seconds = int(config.get("duration_seconds", 180))
     producer = music_chunk_producer or _generate_lyria_pcm_chunks
     pcm_chunks = await _produce_music_with_retries(producer, prompt, config, music_result, target_seconds)
