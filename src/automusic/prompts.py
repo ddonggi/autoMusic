@@ -66,6 +66,7 @@ def build_music_prompt_with_metadata(config: dict[str, Any]) -> dict[str, Any]:
     arrangement = _format_arrangement(arrangement_values)
     vocals = str(config.get("vocals", "none")).lower()
     negative_rules = _join(config.get("negative_rules", []))
+    music_context = str(config.get("music_context", "intense workout sessions"))
 
     vocal_text = "instrumental focus"
     if vocals in {"none", "instrumental"}:
@@ -74,7 +75,7 @@ def build_music_prompt_with_metadata(config: dict[str, Any]) -> dict[str, Any]:
         vocal_text = "instrumental focus with sparse crowd-style chants"
 
     parts = [
-        f"Create a {duration}-second {genre} track for intense workout sessions.",
+        f"Create a {duration}-second {genre} track for {music_context}.",
         f"{bpm}, {mood} mood." if mood else f"{bpm}.",
         f"Use {instruments}." if instruments else "",
         f"Texture: {texture}." if texture else "",
@@ -109,8 +110,9 @@ def build_image_prompt_with_metadata(
     genre = str(metadata.get("genre", "Brazilian phonk"))
     mood = _join(metadata.get("mood", [])) or "aggressive, focused"
     texture = _join(metadata.get("texture", [])) or "gritty, high contrast"
+    image_context = str(config.get("image_context", "workout music video"))
     prompt = (
-        "Create a 16:9 cinematic background image for a workout music video. "
+        f"Create a 16:9 cinematic background image for a {image_context}. "
         f"Visualize the energy of {genre}: {mood}, {texture}. "
         f"Style: {variant.get('visual_style', 'cyberpunk gym scene')}. "
         f"Subject: {variant.get('subject', 'athletic silhouette in a training space')}. "

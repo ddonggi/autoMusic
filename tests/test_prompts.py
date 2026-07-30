@@ -1,3 +1,4 @@
+import importlib.util
 import sys
 import unittest
 from pathlib import Path
@@ -10,9 +11,56 @@ from automusic.prompts import (
     build_music_prompt,
     build_music_prompt_with_metadata,
 )
+from automusic.config import load_config
 
 
 class PromptTests(unittest.TestCase):
+    def test_build_music_prompt_uses_configured_music_context(self):
+        prompt = build_music_prompt(
+            {
+                "duration_seconds": 180,
+                "genre": "ambient study music",
+                "music_context": "deep study and concentration sessions",
+                "bpm_min": 70,
+                "bpm_max": 78,
+                "vocals": "none",
+            }
+        )
+
+        self.assertIn("deep study and concentration sessions", prompt)
+        self.assertNotIn("intense workout sessions", prompt)
+
+    def test_build_image_prompt_uses_configured_image_context(self):
+        result = build_image_prompt_with_metadata(
+            "music prompt",
+            {"genre": "ambient study music", "mood": ["calm"], "texture": ["soft"]},
+            {"image_context": "study focus music video"},
+        )
+
+        self.assertIn("study focus music video", result["prompt"])
+        self.assertNotIn("workout music video", result["prompt"])
+
+    @unittest.skipUnless(importlib.util.find_spec("yaml"), "PyYAML is required for nested YAML presets")
+    def test_study_preset_loads_complete_variants_and_contexts(self):
+        config = load_config(
+            Path(__file__).resolve().parents[1] / "configs" / "examples" / "study.yaml"
+        )
+
+        self.assertEqual(config["music_context"], "deep study and concentration sessions")
+        self.assertEqual(config["image_context"], "study focus music video")
+        self.assertEqual(config["vocals"], "none")
+        self.assertEqual((config["bpm_min"], config["bpm_max"]), (70, 78))
+        self.assertEqual(len(config["prompt_variants"]), 6)
+        self.assertTrue(
+            all(
+                variant["arrangement"][0].startswith("0:00-")
+                and variant["arrangement"][-1].startswith("2:")
+                and "3:00" in variant["arrangement"][-1]
+                for variant in config["prompt_variants"]
+            )
+        )
+        self.assertEqual(len(config["image_variants"]), 4)
+
     def test_build_music_prompt_uses_brazilian_phonk_fields(self):
         config = {
             "duration_seconds": 180,

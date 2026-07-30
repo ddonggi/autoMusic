@@ -1,0 +1,174 @@
+duration_seconds: 180
+genre: ambient study music
+music_context: deep study and concentration sessions
+image_context: study focus music video
+bpm_min: 70
+bpm_max: 78
+mood:
+  - calm
+  - focused
+  - clear-headed
+instruments:
+  - warm electric piano
+  - soft ambient pads
+  - gentle low pulse
+texture:
+  - clean spacious atmosphere
+  - subtle tape warmth
+vocals: none
+negative_rules:
+  - no vocals or spoken words
+  - no sudden volume changes
+  - no harsh percussion or distracting rhythmic hooks
+  - avoid dramatic drops, builds, and climaxes
+  - avoid static one-loop repetition
+  - use gentle section changes for sustained concentration
+  - end with a calm natural fade without abrupt cutoff
+prompt_variants:
+  - name: warm-library-dawn
+    bpm_min: 70
+    bpm_max: 74
+    mood:
+      - warm
+      - unhurried
+      - attentive
+    instruments:
+      - felt piano chords
+      - soft room-tone pad
+      - barely audible low pulse
+    texture:
+      - sunlit library air
+      - soft tape warmth
+    arrangement:
+      - "0:00-0:25 Intro: felt piano chords emerge with soft room-tone pad"
+      - "0:25-0:55 Settle: add a barely audible low pulse beneath spacious harmony"
+      - "0:55-1:25 Focus: continue the piano motif with gentle chord color changes"
+      - "1:25-1:55 Rest: thin the texture to piano and quiet ambient air"
+      - "1:55-2:30 Renew: return the warm pad and slow harmonic movement"
+      - "2:30-3:00 Outro: let the piano and room tone fade naturally without abrupt cutoff"
+  - name: rain-window-focus
+    bpm_min: 72
+    bpm_max: 76
+    mood:
+      - peaceful
+      - steady
+      - grounded
+    instruments:
+      - soft electric piano
+      - muted rain-like texture
+      - rounded bass pulse
+    texture:
+      - quiet window rain ambience
+      - smooth low contrast
+    arrangement:
+      - "0:00-0:20 Intro: quiet rain-like texture and soft electric piano enter slowly"
+      - "0:20-0:50 Settle: add a rounded bass pulse at a restrained pace"
+      - "0:50-1:25 Focus: repeat a simple piano phrase with slight harmonic variation"
+      - "1:25-1:50 Rest: remove the bass pulse and leave the rain-like texture open"
+      - "1:50-2:35 Renew: restore the gentle pulse and broaden the soft piano voicing"
+      - "2:35-3:00 Outro: reduce the piano into quiet rain ambience and a natural fade"
+  - name: soft-analog-desk
+    bpm_min: 70
+    bpm_max: 75
+    mood:
+      - intimate
+      - calm
+      - sustained
+    instruments:
+      - mellow synth keys
+      - soft analog pad
+      - light sub bass
+    texture:
+      - subtle cassette warmth
+      - close quiet studio air
+    arrangement:
+      - "0:00-0:22 Intro: mellow synth keys appear over subtle cassette warmth"
+      - "0:22-0:52 Settle: introduce a soft analog pad and light sub bass"
+      - "0:52-1:22 Focus: keep the keys steady while the pad shifts gradually"
+      - "1:22-1:52 Rest: lower the sub bass and leave a sparse key pattern"
+      - "1:52-2:32 Renew: restore the warm pad with a slightly wider harmonic field"
+      - "2:32-3:00 Outro: let the keys soften into close quiet studio air"
+  - name: clear-sky-reading
+    bpm_min: 74
+    bpm_max: 78
+    mood:
+      - clear
+      - optimistic
+      - composed
+    instruments:
+      - airy piano notes
+      - transparent synth pad
+      - soft brushed pulse
+    texture:
+      - bright open air
+      - clean gentle reverb
+    arrangement:
+      - "0:00-0:18 Intro: airy piano notes rest inside a transparent synth pad"
+      - "0:18-0:48 Settle: add a soft brushed pulse that stays behind the harmony"
+      - "0:48-1:20 Focus: keep a clear piano pattern with slow chord transitions"
+      - "1:20-1:48 Rest: suspend the pulse and leave spacious sustained notes"
+      - "1:48-2:36 Renew: return the brushed pulse with gentle brighter voicings"
+      - "2:36-3:00 Outro: release the notes into clean gentle reverb and a calm fade"
+  - name: midnight-essay
+    bpm_min: 70
+    bpm_max: 74
+    mood:
+      - quiet
+      - reflective
+      - concentrated
+    instruments:
+      - low felt piano
+      - dark ambient pad
+      - soft distant pulse
+    texture:
+      - midnight room hush
+      - restrained low-end warmth
+    arrangement:
+      - "0:00-0:24 Intro: low felt piano and midnight room hush establish a quiet space"
+      - "0:24-0:54 Settle: add a soft distant pulse beneath the dark ambient pad"
+      - "0:54-1:24 Focus: maintain a slow piano figure with minimal note movement"
+      - "1:24-1:54 Rest: let the pulse recede and keep only the hush and piano"
+      - "1:54-2:34 Renew: bring back the pad with slightly warmer sustained harmony"
+      - "2:34-3:00 Outro: allow the low piano resonance to fade without a sudden ending"
+  - name: botanical-morning
+    bpm_min: 72
+    bpm_max: 77
+    mood:
+      - fresh
+      - balanced
+      - attentive
+    instruments:
+      - gentle marimba-like keys
+      - soft organic pad
+      - minimal low pulse
+    texture:
+      - calm botanical air
+      - natural soft resonance
+    arrangement:
+      - "0:00-0:20 Intro: gentle marimba-like keys float in calm botanical air"
+      - "0:20-0:50 Settle: add a soft organic pad and minimal low pulse"
+      - "0:50-1:24 Focus: continue a balanced key motif with small tonal shifts"
+      - "1:24-1:52 Rest: remove the pulse and leave the organic pad breathing"
+      - "1:52-2:35 Renew: restore the keys with warm natural soft resonance"
+      - "2:35-3:00 Outro: thin the layers gradually into a quiet natural fade"
+image_variants:
+  - name: sunlit-library
+    visual_style: warm cinematic study interior
+    subject: an open notebook and reading lamp on a wooden library desk, no people
+    palette: honey gold, cream, walnut brown, soft green
+    texture: morning window light, paper grain, gentle dust motes
+  - name: rain-window-desk
+    visual_style: tranquil desk by a rain-streaked window
+    subject: a notebook, ceramic mug, and closed laptop in a quiet study space, no people
+    palette: misty blue, soft gray, warm beige
+    texture: diffused rainy light, subtle reflections, calm film grain
+  - name: midnight-reading-room
+    visual_style: intimate nighttime reading room
+    subject: a single desk lamp illuminating books and a handwritten page, no people
+    palette: deep navy, amber, charcoal, muted brown
+    texture: soft shadows, warm lamp glow, low-contrast atmosphere
+  - name: botanical-focus-desk
+    visual_style: airy botanical study still life
+    subject: a clean desk with a notebook, pencil, and leafy plant, no people
+    palette: sage green, ivory, pale wood, muted sunlight
+    texture: soft natural light, gentle paper texture, calm open space
