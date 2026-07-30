@@ -1,5 +1,5 @@
 duration_seconds: 180
-genre: ambient study music
+genre: Study focus ambient
 music_context: deep study and concentration sessions
 image_context: study focus music video
 bpm_min: 70
@@ -16,16 +16,21 @@ texture:
   - clean spacious atmosphere
   - subtle tape warmth
 vocals: none
+temperature: 0.85
+lyria_retries: 3
+lyria_retry_delay_seconds: 30
 negative_rules:
-  - no vocals or spoken words
-  - no sudden volume changes
-  - no harsh percussion or distracting rhythmic hooks
-  - avoid dramatic drops, builds, and climaxes
+  - no aggressive drums or sudden drops
+  - no long silence
+  - no abrupt ending
+  - no vocals
   - avoid static one-loop repetition
   - use gentle section changes for sustained concentration
-  - end with a calm natural fade without abrupt cutoff
+  - no sudden volume changes
+  - no harsh percussion or distracting rhythmic hooks
+  - avoid dramatic builds and climaxes
 prompt_variants:
-  - name: warm-library-dawn
+  - name: lofi-library
     bpm_min: 70
     bpm_max: 74
     mood:
@@ -46,7 +51,7 @@ prompt_variants:
       - "1:25-1:55 Rest: thin the texture to piano and quiet ambient air"
       - "1:55-2:30 Renew: return the warm pad and slow harmonic movement"
       - "2:30-3:00 Outro: let the piano and room tone fade naturally without abrupt cutoff"
-  - name: rain-window-focus
+  - name: rain-window-piano
     bpm_min: 72
     bpm_max: 76
     mood:
@@ -67,7 +72,7 @@ prompt_variants:
       - "1:25-1:50 Rest: remove the bass pulse and leave the rain-like texture open"
       - "1:50-2:35 Renew: restore the gentle pulse and broaden the soft piano voicing"
       - "2:35-3:00 Outro: reduce the piano into quiet rain ambience and a natural fade"
-  - name: soft-analog-desk
+  - name: deep-work-synth
     bpm_min: 70
     bpm_max: 75
     mood:
@@ -88,7 +93,7 @@ prompt_variants:
       - "1:22-1:52 Rest: lower the sub bass and leave a sparse key pattern"
       - "1:52-2:32 Renew: restore the warm pad with a slightly wider harmonic field"
       - "2:32-3:00 Outro: let the keys soften into close quiet studio air"
-  - name: clear-sky-reading
+  - name: night-study-rhodes
     bpm_min: 74
     bpm_max: 78
     mood:
@@ -109,7 +114,7 @@ prompt_variants:
       - "1:20-1:48 Rest: suspend the pulse and leave spacious sustained notes"
       - "1:48-2:36 Renew: return the brushed pulse with gentle brighter voicings"
       - "2:36-3:00 Outro: release the notes into clean gentle reverb and a calm fade"
-  - name: midnight-essay
+  - name: minimal-pulse-focus
     bpm_min: 70
     bpm_max: 74
     mood:
@@ -130,7 +135,7 @@ prompt_variants:
       - "1:24-1:54 Rest: let the pulse recede and keep only the hush and piano"
       - "1:54-2:34 Renew: bring back the pad with slightly warmer sustained harmony"
       - "2:34-3:00 Outro: allow the low piano resonance to fade without a sudden ending"
-  - name: botanical-morning
+  - name: soft-cafe-jazz
     bpm_min: 72
     bpm_max: 77
     mood:
@@ -152,22 +157,22 @@ prompt_variants:
       - "1:52-2:35 Renew: restore the keys with warm natural soft resonance"
       - "2:35-3:00 Outro: thin the layers gradually into a quiet natural fade"
 image_variants:
-  - name: sunlit-library
+  - name: minimal-study-desk
     visual_style: warm cinematic study interior
     subject: an open notebook and reading lamp on a wooden library desk, no people
     palette: honey gold, cream, walnut brown, soft green
     texture: morning window light, paper grain, gentle dust motes
-  - name: rain-window-desk
+  - name: rainy-window-library
     visual_style: tranquil desk by a rain-streaked window
     subject: a notebook, ceramic mug, and closed laptop in a quiet study space, no people
     palette: misty blue, soft gray, warm beige
     texture: diffused rainy light, subtle reflections, calm film grain
-  - name: midnight-reading-room
+  - name: night-focus-workspace
     visual_style: intimate nighttime reading room
     subject: a single desk lamp illuminating books and a handwritten page, no people
     palette: deep navy, amber, charcoal, muted brown
     texture: soft shadows, warm lamp glow, low-contrast atmosphere
-  - name: botanical-focus-desk
+  - name: ambient-bookshelf
     visual_style: airy botanical study still life
     subject: a clean desk with a notebook, pencil, and leafy plant, no people
     palette: sage green, ivory, pale wood, muted sunlight

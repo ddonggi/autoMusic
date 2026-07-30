@@ -1,4 +1,4 @@
-import importlib.util
+import re
 import sys
 import unittest
 from pathlib import Path
@@ -40,26 +40,62 @@ class PromptTests(unittest.TestCase):
         self.assertIn("study focus music video", result["prompt"])
         self.assertNotIn("workout music video", result["prompt"])
 
-    @unittest.skipUnless(importlib.util.find_spec("yaml"), "PyYAML is required for nested YAML presets")
     def test_study_preset_loads_complete_variants_and_contexts(self):
         config = load_config(
             Path(__file__).resolve().parents[1] / "configs" / "examples" / "study.yaml"
         )
 
+        self.assertEqual(config["genre"], "Study focus ambient")
         self.assertEqual(config["music_context"], "deep study and concentration sessions")
         self.assertEqual(config["image_context"], "study focus music video")
         self.assertEqual(config["vocals"], "none")
         self.assertEqual((config["bpm_min"], config["bpm_max"]), (70, 78))
-        self.assertEqual(len(config["prompt_variants"]), 6)
+        self.assertEqual(config["temperature"], 0.85)
+        self.assertEqual(config["lyria_retries"], 3)
+        self.assertEqual(config["lyria_retry_delay_seconds"], 30)
         self.assertTrue(
-            all(
-                variant["arrangement"][0].startswith("0:00-")
-                and variant["arrangement"][-1].startswith("2:")
-                and "3:00" in variant["arrangement"][-1]
-                for variant in config["prompt_variants"]
-            )
+            {
+                "no aggressive drums or sudden drops",
+                "no long silence",
+                "no abrupt ending",
+                "no vocals",
+                "avoid static one-loop repetition",
+            }.issubset(config["negative_rules"])
         )
-        self.assertEqual(len(config["image_variants"]), 4)
+        self.assertEqual(
+            [variant["name"] for variant in config["prompt_variants"]],
+            [
+                "lofi-library",
+                "rain-window-piano",
+                "deep-work-synth",
+                "night-study-rhodes",
+                "minimal-pulse-focus",
+                "soft-cafe-jazz",
+            ],
+        )
+        for variant in config["prompt_variants"]:
+            self.assertEqual(len(variant["arrangement"]), 6)
+            time_ranges = [re.match(r"^(\d:\d{2})-(\d:\d{2}) ", line) for line in variant["arrangement"]]
+            self.assertTrue(all(time_ranges))
+            self.assertEqual(time_ranges[0].group(1), "0:00")
+            self.assertEqual(time_ranges[-1].group(2), "3:00")
+            self.assertTrue(
+                all(
+                    time_ranges[index].group(2) == time_ranges[index + 1].group(1)
+                    for index in range(len(time_ranges) - 1)
+                )
+            )
+        self.assertEqual(
+            [variant["name"] for variant in config["image_variants"]],
+            [
+                "minimal-study-desk",
+                "rainy-window-library",
+                "night-focus-workspace",
+                "ambient-bookshelf",
+            ],
+        )
+        for variant in config["image_variants"]:
+            self.assertTrue({"visual_style", "subject", "palette", "texture"}.issubset(variant))
 
     def test_build_music_prompt_uses_brazilian_phonk_fields(self):
         config = {
