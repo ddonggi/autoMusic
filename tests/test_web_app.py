@@ -5,7 +5,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from automusic.web_app import create_app
+from automusic.image import generate_image
+from automusic.music import generate_lyria_track
+from automusic.render import render_track
+from automusic.web_app import create_app, create_default_service
 
 
 class FakeService:
@@ -61,6 +64,29 @@ class WebAppTests(unittest.TestCase):
         self.assertEqual(page.status_code, 200)
         self.assertIn("3단계", page.get_data(as_text=True))
         self.assertEqual(response.get_json()[0]["id"], "study")
+
+    def test_create_default_service_loads_fixture_presets_with_injected_executor(self):
+        class ImmediateExecutor:
+            def submit(self, function, *args):
+                return function(*args)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            examples = root / "configs" / "examples"
+            examples.mkdir(parents=True)
+            (examples / "music.yaml").write_text("genre: Brazilian phonk\n")
+            (examples / "study.yaml").write_text("genre: Study focus ambient\n")
+            executor = ImmediateExecutor()
+
+            service = create_default_service(root, executor=executor)
+
+        self.assertEqual(service.preset_ids, ["phonk", "study"])
+        self.assertEqual(service.presets["phonk"]["genre"], "Brazilian phonk")
+        self.assertEqual(service.presets["study"]["genre"], "Study focus ambient")
+        self.assertIs(service.track_generator, generate_lyria_track)
+        self.assertIs(service.image_generator, generate_image)
+        self.assertIs(service.track_renderer, render_track)
+        self.assertIs(service.executor, executor)
 
     def test_create_job_validates_input_and_starts_known_preset(self):
         invalid = self.client.post("/api/jobs", json={"preset_id": "missing"})

@@ -1,8 +1,33 @@
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 from typing import Any
 
 from flask import Flask, jsonify, render_template, request, send_file
+
+from .config import load_config
+from .image import generate_image
+from .music import generate_lyria_track
+from .render import render_track
+from .web_jobs import WebJobService
+
+
+def create_default_service(root: Path, executor: Any | None = None) -> WebJobService:
+    root = root.resolve()
+    examples_root = root / "configs" / "examples"
+    presets = {
+        "phonk": load_config(examples_root / "music.yaml"),
+        "study": load_config(examples_root / "study.yaml"),
+    }
+    return WebJobService(
+        root,
+        presets,
+        track_generator=generate_lyria_track,
+        image_generator=generate_image,
+        track_renderer=render_track,
+        executor=executor or ThreadPoolExecutor(max_workers=1),
+    )
 
 
 def create_app(service: Any) -> Flask:

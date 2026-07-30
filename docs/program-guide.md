@@ -487,3 +487,18 @@ python3 -m unittest discover -s tests -v
 python3 -m compileall -q src scripts tests
 python3 scripts/install_launchd.py --dry-run
 ```
+
+# 로컬 웹 음악 생성기
+
+로컬 브라우저에서 프리셋을 고르고 프롬프트를 다듬어 음악, 이미지, 단일 MP4를 생성할 수 있습니다.
+
+```bash
+.venv/bin/python scripts/run_web.py
+```
+
+실행 후 [http://127.0.0.1:8765](http://127.0.0.1:8765)를 엽니다. 서버는 기본적으로 `127.0.0.1:8765`에서만 실행되며, `--host`에는 `127.0.0.1` 또는 `localhost`만 사용할 수 있습니다.
+
+- API 키는 `.env`의 환경 변수로만 관리합니다. 브라우저나 작업 파일에 키를 넣지 않습니다.
+- 실제 음악과 이미지 생성에는 제공업체 사용 비용이 발생할 수 있습니다. 생성 전에 각 계정의 요금과 한도를 확인하세요.
+- 생성 완료 또는 부분 완료 파일은 `workspace/web-jobs/<job-id>/`에 저장되며, 웹 화면의 다운로드 링크로 받을 수 있습니다.
+- 이 웹 명령은 YouTube 업로드를 실행하지 않으며, 일일 스케줄러나 `launchd` 작업을 활성화하지 않습니다.
