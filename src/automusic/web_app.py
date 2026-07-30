@@ -34,9 +34,12 @@ def create_app(service: Any) -> Flask:
     @app.get("/api/jobs/<job_id>")
     def get_job(job_id: str):
         try:
-            return jsonify(service.get(job_id))
+            job = service.get(job_id)
         except (FileNotFoundError, ValueError):
             return _not_found()
+        if job is None:
+            return _not_found()
+        return jsonify(job)
 
     @app.get("/api/jobs/<job_id>/downloads/<asset>")
     def download_asset(job_id: str, asset: str):

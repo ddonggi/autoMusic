@@ -60,6 +60,7 @@ async function createJob() {
     return;
   }
   createButton.disabled = true;
+  setPresetControlsDisabled(true);
   jobStatus.textContent = "작업을 예약하고 있습니다.";
   try {
     const response = await fetch("/api/jobs", {
@@ -74,6 +75,7 @@ async function createJob() {
     formError.textContent = error instanceof Error ? error.message : "작업을 시작하지 못했습니다.";
     jobStatus.textContent = "다시 시도할 수 있습니다.";
     createButton.disabled = false;
+    setPresetControlsDisabled(false);
   }
 }
 
@@ -86,17 +88,21 @@ async function pollJob(jobId) {
     if (job.status === "completed") {
       renderAssetLinks(jobId, job.artifacts);
       createButton.disabled = false;
+      setPresetControlsDisabled(false);
       return;
     }
     if (job.status === "failed") {
+      renderAssetLinks(jobId, job.artifacts);
       formError.textContent = job.error || "작업을 완료하지 못했습니다.";
       createButton.disabled = false;
+      setPresetControlsDisabled(false);
       return;
     }
     window.setTimeout(() => pollJob(jobId), 2000);
   } catch (error) {
     formError.textContent = error instanceof Error ? error.message : "작업 상태를 확인하지 못했습니다.";
     createButton.disabled = false;
+    setPresetControlsDisabled(false);
   }
 }
 
@@ -120,6 +126,12 @@ function renderAssetLinks(jobId, artifacts) {
     link.href = `/api/jobs/${encodeURIComponent(jobId)}/downloads/${asset}`;
     link.textContent = `${asset.toUpperCase()} 다운로드`;
     assetLinks.append(link);
+  });
+}
+
+function setPresetControlsDisabled(disabled) {
+  document.querySelectorAll('input[name="preset"]').forEach((input) => {
+    input.disabled = disabled;
   });
 }
 

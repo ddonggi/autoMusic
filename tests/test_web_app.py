@@ -31,6 +31,8 @@ class FakeService:
         return {"id": "job-001", "status": "queued"}
 
     def get(self, job_id):
+        if job_id == "empty":
+            return None
         if job_id != "job-001":
             raise FileNotFoundError(job_id)
         return {"id": job_id, "status": "completed", "artifacts": {"audio": "audio.wav"}}
@@ -86,17 +88,20 @@ class WebAppTests(unittest.TestCase):
     def test_status_and_download_routes_hide_missing_jobs_and_assets(self):
         status = self.client.get("/api/jobs/job-001")
         missing_job = self.client.get("/api/jobs/missing")
+        empty_job = self.client.get("/api/jobs/empty")
         download = self.client.get("/api/jobs/job-001/downloads/audio")
         missing_asset = self.client.get("/api/jobs/job-001/downloads/video")
+        self.addCleanup(download.close)
 
         self.assertEqual(status.status_code, 200)
         self.assertEqual(status.get_json()["status"], "completed")
         self.assertEqual(missing_job.status_code, 404)
+        self.assertEqual(empty_job.status_code, 404)
+        self.assertIn("찾을 수 없습니다", empty_job.get_json()["error"])
         self.assertEqual(download.status_code, 200)
         self.assertEqual(download.data, b"audio")
         self.assertIn("attachment", download.headers["Content-Disposition"])
         self.assertEqual(missing_asset.status_code, 404)
-        download.close()
 
 
 if __name__ == "__main__":
