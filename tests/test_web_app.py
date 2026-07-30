@@ -1,7 +1,11 @@
+import contextlib
+import importlib.util
+import io
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
@@ -9,6 +13,15 @@ from automusic.image import generate_image
 from automusic.music import generate_lyria_track
 from automusic.render import render_track
 from automusic.web_app import create_app, create_default_service
+
+
+def load_run_web_module():
+    path = Path(__file__).resolve().parents[1] / "scripts" / "run_web.py"
+    spec = importlib.util.spec_from_file_location("automusic_run_web_test", path)
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
 
 
 class FakeService:
@@ -87,6 +100,38 @@ class WebAppTests(unittest.TestCase):
         self.assertIs(service.image_generator, generate_image)
         self.assertIs(service.track_renderer, render_track)
         self.assertIs(service.executor, executor)
+
+    def test_run_web_normalizes_localhost_before_starting_app(self):
+        module = load_run_web_module()
+        run_arguments = {}
+
+        class FakeApp:
+            def run(self, **kwargs):
+                run_arguments.update(kwargs)
+
+        with (
+            patch.object(module, "load_dotenv"),
+            patch.object(module, "create_default_service", return_value=object()),
+            patch.object(module, "create_app", return_value=FakeApp()),
+            patch.object(sys, "argv", ["run_web.py", "--host", "localhost"]),
+        ):
+            module.main()
+
+        self.assertEqual(run_arguments["host"], "127.0.0.1")
+        self.assertFalse(run_arguments["debug"])
+
+    def test_run_web_rejects_external_host_with_korean_message(self):
+        module = load_run_web_module()
+        stderr = io.StringIO()
+
+        with (
+            patch.object(sys, "argv", ["run_web.py", "--host", "0.0.0.0"]),
+            contextlib.redirect_stderr(stderr),
+            self.assertRaises(SystemExit),
+        ):
+            module.parse_args()
+
+        self.assertIn("외부 네트워크 공개는 지원하지 않습니다.", stderr.getvalue())
 
     def test_create_job_validates_input_and_starts_known_preset(self):
         invalid = self.client.post("/api/jobs", json={"preset_id": "missing"})

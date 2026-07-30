@@ -19,7 +19,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--port", type=int, default=8765)
     args = parser.parse_args()
     if args.host not in {"127.0.0.1", "localhost"}:
-        parser.error("--host must be 127.0.0.1 or localhost")
+        parser.error("외부 네트워크 공개는 지원하지 않습니다.")
     return args
 
 
@@ -28,7 +28,8 @@ def main() -> None:
     root = args.root.resolve()
     load_dotenv(root / ".env")
     app = create_app(create_default_service(root))
-    app.run(host=args.host, port=args.port, debug=False)
+    host = "127.0.0.1" if args.host == "localhost" else args.host
+    app.run(host=host, port=args.port, debug=False)
 
 
 if __name__ == "__main__":
