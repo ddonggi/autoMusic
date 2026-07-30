@@ -116,6 +116,7 @@ class PromptTests(unittest.TestCase):
 
         self.assertIn("180-second", prompt)
         self.assertIn("Brazilian phonk", prompt)
+        self.assertIn("for intense workout sessions", prompt)
         self.assertIn("132-138 BPM", prompt)
         self.assertIn("distorted 808 bass", prompt)
         self.assertIn("driving cowbell lead", prompt)
