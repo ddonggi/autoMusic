@@ -11,12 +11,57 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from automusic.audio import write_pcm16_wav
 from automusic.image import decode_image_response
-from automusic.render import build_concat_command, build_segment_command, render_batch
+from automusic.render import build_concat_command, build_segment_command, render_batch, render_track
 from automusic.state import save_json
 from automusic.youtube import build_video_body, should_skip_upload, update_batch_after_upload
 
 
 class AudioRenderUploadTests(unittest.TestCase):
+    def test_render_track_writes_video_with_one_segment_command_without_changing_batch(self):
+        calls = []
+
+        def fake_runner(command, check):
+            calls.append((command, check))
+            Path(command[-1]).write_bytes(b"fake video")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            track_dir = root / "tracks" / "track-001"
+            track_dir.mkdir(parents=True)
+            (track_dir / "audio.wav").write_bytes(b"fake audio")
+            (track_dir / "image.png").write_bytes(b"fake image")
+            save_json(
+                track_dir / "track.json",
+                {
+                    "track_id": "track-001",
+                    "audio_path": "audio.wav",
+                    "image_path": "image.png",
+                    "duration_seconds": 180.0,
+                    "batch_id": "batch-001",
+                },
+            )
+            batch_path = root / "batches" / "batch-001" / "batch.json"
+            batch_path.parent.mkdir(parents=True)
+            batch_path.write_text('{"status": "assembled"}')
+            batch_before = batch_path.read_bytes()
+
+            output_path = render_track(track_dir, runner=fake_runner)
+
+            batch_after = batch_path.read_bytes()
+            output_exists = output_path.exists()
+
+        self.assertEqual(output_path.name, "video.mp4")
+        self.assertTrue(output_exists)
+        self.assertEqual(len(calls), 1)
+        self.assertTrue(calls[0][1])
+        self.assertEqual(calls[0][0], build_segment_command(
+            image_path=track_dir / "image.png",
+            audio_path=track_dir / "audio.wav",
+            output_path=track_dir / "video.mp4",
+            duration=180.0,
+        ))
+        self.assertEqual(batch_after, batch_before)
+
     def test_write_pcm16_wav_writes_valid_stereo_file(self):
         pcm = [b"\x00\x00\x00\x00" * 10]
         with tempfile.TemporaryDirectory() as tmp:

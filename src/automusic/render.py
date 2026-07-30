@@ -55,6 +55,23 @@ def build_concat_command(*, concat_file: Path, output_path: Path) -> list[str]:
     ]
 
 
+def render_track(
+    track_dir: Path,
+    *,
+    runner=subprocess.run,
+) -> Path:
+    track = load_json(track_dir / "track.json")
+    output_path = track_dir / "video.mp4"
+    command = build_segment_command(
+        image_path=track_dir / track["image_path"],
+        audio_path=track_dir / track["audio_path"],
+        output_path=output_path,
+        duration=float(track.get("duration_seconds") or 180.0),
+    )
+    runner(command, check=True)
+    return output_path
+
+
 def render_batch(
     batch_path: Path,
     tracks_root: Path,

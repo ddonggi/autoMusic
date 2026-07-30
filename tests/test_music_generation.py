@@ -11,6 +11,28 @@ from automusic.music import generate_lyria_track
 
 
 class MusicGenerationTests(unittest.TestCase):
+    def test_generate_lyria_track_uses_and_stores_custom_music_prompt(self):
+        received_prompts = []
+
+        async def producer(prompt, config, music_result, target_seconds):
+            received_prompts.append(prompt)
+            return [b"\0" * 48_000 * 2 * 2]
+
+        custom_prompt = "A quiet custom study focus arrangement."
+        with tempfile.TemporaryDirectory() as tmp:
+            track_dir = asyncio.run(
+                generate_lyria_track(
+                    {"duration_seconds": 1, "genre": "Brazilian phonk"},
+                    Path(tmp) / "tracks",
+                    music_prompt=custom_prompt,
+                    music_chunk_producer=producer,
+                )
+            )
+            track = json.loads((track_dir / "track.json").read_text())
+
+        self.assertEqual(received_prompts, [custom_prompt])
+        self.assertEqual(track["music_prompt"], custom_prompt)
+
     def test_generate_lyria_track_retries_transient_music_errors(self):
         attempts = 0
 
