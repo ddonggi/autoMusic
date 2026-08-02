@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>음악의 초안 | AutoMusic</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='web/app.css') }}">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="masthead">
+        <p class="eyebrow">AUTOMUSIC / LOCAL STUDIO</p>
+        <div class="title-row">
+          <h1>음악의 초안</h1>
+          <span class="edition">VOL. 01</span>
+        </div>
+        <p class="lede">집중할 시간을 위한 한 곡을, 세 번의 선택으로 만듭니다.</p>
+      </header>
+
+      <section class="steps" aria-label="3단계 음악 생성">
+        <article class="step-card select-card">
+          <div class="step-number">01</div>
+          <div>
+            <p class="label">장면 선택</p>
+            <h2>오늘의 결을 고르세요.</h2>
+            <div id="preset-list" class="preset-list" aria-live="polite">
+              <p class="loading">프리셋을 불러오는 중입니다.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="step-card prompt-card">
+          <div class="step-number">02</div>
+          <div class="prompt-content">
+            <label class="label" for="music-prompt">음악 지시문</label>
+            <h2>필요한 만큼만 다듬으세요.</h2>
+            <textarea id="music-prompt" rows="8" aria-describedby="prompt-note"></textarea>
+            <p id="prompt-note" class="note">프리셋의 기본 문장을 바탕으로 자연스럽게 수정할 수 있습니다.</p>
+          </div>
+        </article>
+
+        <article class="step-card launch-card">
+          <div class="step-number">03</div>
+          <div class="launch-content">
+            <p class="label">생성 시작</p>
+            <h2>한 곡의 작업실을 엽니다.</h2>
+            <p class="note">음악, 이미지, 영상이 차례로 완성됩니다.</p>
+            <button id="create-job" class="create-button" type="button">음악 만들기 <span aria-hidden="true">→</span></button>
+            <p id="form-error" class="form-error" role="alert"></p>
+          </div>
+        </article>
+      </section>
+
+      <section class="status-panel" aria-live="polite" aria-atomic="true">
+        <div class="status-heading">
+          <p class="label">작업 현황</p>
+          <p id="job-status" class="status-copy">프리셋을 고르면 작업을 시작할 수 있습니다.</p>
+        </div>
+        <div id="asset-links" class="asset-links" aria-label="완성된 파일"></div>
+      </section>
+    </main>
+    <script src="{{ url_for('static', filename='web/app.js') }}" defer></script>
+  </body>
+</html>
