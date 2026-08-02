@@ -22,8 +22,8 @@ class AutomationScheduleTests(unittest.TestCase):
             result = run_automation(
                 project_root=Path("/project"),
                 root=root,
-                music_config=Path("/project/configs/examples/music.yaml"),
-                upload_config=Path("/project/configs/examples/upload.yaml"),
+                music_config=Path("/project/configs/categories/phonk.yaml"),
+                upload_config=Path("/project/configs/upload.yaml"),
                 batch_count=10,
                 python_path=Path("/python"),
                 runner=lambda command, check, cwd: calls.append((command, check, cwd)),
@@ -43,8 +43,8 @@ class AutomationScheduleTests(unittest.TestCase):
             result = run_automation(
                 project_root=Path("/project"),
                 root=root,
-                music_config=Path("/project/configs/examples/music.yaml"),
-                upload_config=Path("/project/configs/examples/upload.yaml"),
+                music_config=Path("/project/configs/categories/phonk.yaml"),
+                upload_config=Path("/project/configs/upload.yaml"),
                 batch_count=10,
                 python_path=Path("/python"),
                 runner=lambda command, check, cwd: calls.append((command, check, cwd)),
@@ -54,6 +54,7 @@ class AutomationScheduleTests(unittest.TestCase):
         self.assertEqual(len(calls), 2)
         self.assertIn("run_daily.py", calls[0][0][1])
         self.assertIn("run_batch_upload.py", calls[1][0][1])
+        self.assertIn("--music-config", calls[1][0])
 
     def test_run_automation_runs_batch_when_pending_batch_exists(self):
         calls = []
@@ -74,8 +75,8 @@ class AutomationScheduleTests(unittest.TestCase):
             result = run_automation(
                 project_root=Path("/project"),
                 root=root,
-                music_config=Path("/project/configs/examples/music.yaml"),
-                upload_config=Path("/project/configs/examples/upload.yaml"),
+                music_config=Path("/project/configs/categories/phonk.yaml"),
+                upload_config=Path("/project/configs/upload.yaml"),
                 batch_count=10,
                 python_path=Path("/python"),
                 runner=lambda command, check, cwd: calls.append((command, check, cwd)),
@@ -123,7 +124,7 @@ def _write_tracks(root: Path, count: int) -> None:
             track_dir / "track.json",
             {
                 "track_id": f"track-{index:02d}",
-                "status": "imaged",
+                "status": "generated",
                 "created_at": f"2026-05-01T00:{index:02d}:00+09:00",
                 "batch_id": None,
             },

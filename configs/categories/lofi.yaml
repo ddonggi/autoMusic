@@ -1,0 +1,214 @@
+duration_seconds: 180
+batch_count: 10
+genre: Focus lo-fi hip hop
+music_context: deep study, reading, and focused desk work
+image_context: cozy lo-fi study music video
+bpm_min: 68
+bpm_max: 82
+mood:
+  - calm
+  - focused
+  - warm
+  - unobtrusive
+instruments:
+  - dusty electric piano
+  - soft boom bap drums
+  - mellow bass
+  - subtle vinyl texture
+texture:
+  - warm cassette saturation
+  - gentle vinyl crackle
+  - intimate late-night room tone
+  - soft tape wobble
+vocals: none
+temperature: 0.9
+lyria_retries: 3
+lyria_retry_delay_seconds: 30
+negative_rules:
+  - no vocals
+  - no aggressive drums
+  - no sudden drops
+  - no distracting lead melody
+  - no long silence
+  - no abrupt ending
+  - avoid static one-loop repetition
+  - include subtle section changes
+  - keep the dynamics suitable for concentration
+prompt_variants:
+  - name: dusty-study-piano
+    title_options:
+      - Quiet Pages
+      - Dust on the Desk
+      - One More Chapter
+    bpm_min: 70
+    bpm_max: 76
+    mood:
+      - peaceful
+      - thoughtful
+      - steady
+    instruments:
+      - dusty Fender Rhodes
+      - muted kick and snare
+      - rounded upright bass
+    texture:
+      - soft room ambience
+      - light vinyl crackle
+      - faded cassette warmth
+    arrangement:
+      - "0:00-0:18 Intro: filtered Rhodes chords, faint vinyl noise, and a soft room tone"
+      - "0:18-0:48 Settle: introduce a restrained boom bap groove and rounded bass"
+      - "0:48-1:22 Focus: develop a simple piano motif with small harmonic changes"
+      - "1:22-1:44 Rest: remove the kick and leave Rhodes, crackle, and quiet ambience"
+      - "1:44-2:35 Renew: restore the groove with a warmer bass line and gentle drum fills"
+      - "2:35-3:00 Outro: gradually reduce the drums and let the piano resolve naturally"
+  - name: rainy-window-lofi
+    title_options:
+      - Rain Between Chapters
+      - Windowlight Study
+      - Soft Weather
+    bpm_min: 68
+    bpm_max: 74
+    mood:
+      - reflective
+      - tranquil
+      - sheltered
+    instruments:
+      - soft felt piano
+      - brushed percussion
+      - low rounded bass
+      - distant electric guitar harmonics
+    texture:
+      - quiet rain ambience
+      - blurred tape hiss
+      - dim window-side atmosphere
+    arrangement:
+      - "0:00-0:20 Intro: rain-like ambience, felt piano fragments, and distant tape hiss"
+      - "0:20-0:52 Build: add brushed percussion and a low rounded bass pulse"
+      - "0:52-1:24 Focus: settle into a gentle piano phrase with sparse guitar harmonics"
+      - "1:24-1:50 Breathing space: pull back the drums and widen the rain ambience"
+      - "1:50-2:36 Return: bring back the soft groove with slightly brighter piano voicings"
+      - "2:36-3:00 Outro: let the phrase dissolve into rain and a quiet tape fade"
+  - name: late-night-rhodes
+    title_options:
+      - After Hours Focus
+      - Lamplight Notes
+      - Midnight Pages
+    bpm_min: 72
+    bpm_max: 80
+    mood:
+      - nocturnal
+      - mellow
+      - concentrated
+    instruments:
+      - warm Rhodes piano
+      - muted jazz guitar
+      - brushed snare
+      - deep but soft bass
+    texture:
+      - dim apartment room tone
+      - warm tube saturation
+      - subtle record crackle
+    arrangement:
+      - "0:00-0:16 Intro: warm Rhodes voicings, muted guitar echoes, and a dim room tone"
+      - "0:16-0:46 Groove: add brushed snare and a soft deep bass pocket"
+      - "0:46-1:20 Focus: establish a mellow Rhodes hook with restrained jazz guitar answers"
+      - "1:20-1:46 Breakdown: strip to Rhodes chords, bass tails, and room ambience"
+      - "1:46-2:36 Climax: return with fuller voicings and slightly denser but gentle drums"
+      - "2:36-3:00 Outro: thin the layers while keeping the late-night warmth until the final chord"
+  - name: cassette-beat
+    title_options:
+      - Rewind the Afternoon
+      - Tape Loop Memories
+      - Small Steps Forward
+    bpm_min: 76
+    bpm_max: 82
+    mood:
+      - grounded
+      - lightly upbeat
+      - comfortable
+    instruments:
+      - dusty sample-like piano
+      - soft boom bap kick
+      - dry snare
+      - mellow electric bass
+    texture:
+      - cassette wow and flutter
+      - dusty sampling character
+      - gentle analog compression
+    arrangement:
+      - "0:00-0:14 Intro: chopped piano color, cassette flutter, and distant kick previews"
+      - "0:14-0:42 Groove build: add dry snare, soft kick, and mellow electric bass"
+      - "0:42-1:18 Main groove: lock into a comfortable beat with small piano sample variations"
+      - "1:18-1:44 Reset: remove the kick and let tape movement carry the piano phrase"
+      - "1:44-2:34 Focus return: restore the groove with subtle snare ghost notes and bass movement"
+      - "2:34-3:00 Outro: slow the arrangement gently and end with a clean cassette tail"
+  - name: jazzhop-library
+    title_options:
+      - The Quiet Reading Room
+      - Between the Shelves
+      - Library After Rain
+    bpm_min: 70
+    bpm_max: 78
+    mood:
+      - scholarly
+      - warm
+      - patient
+    instruments:
+      - mellow upright piano
+      - upright bass
+      - brushed jazz drums
+      - soft vibraphone accents
+    texture:
+      - quiet library air
+      - wood-room resonance
+      - low-level vinyl dust
+    arrangement:
+      - "0:00-0:20 Intro: upright piano and library air enter with sparse vibraphone accents"
+      - "0:20-0:50 Foundation: add brushed drums and a patient upright bass line"
+      - "0:50-1:25 Study groove: develop a warm jazzhop progression with restrained variations"
+      - "1:25-1:52 Pause: leave piano, room resonance, and a few vibraphone notes exposed"
+      - "1:52-2:38 Deep focus: return with rounded bass and softly articulated brushed drums"
+      - "2:38-3:00 Outro: resolve the progression slowly without silence or abrupt cutoff"
+  - name: minimal-focus-beat
+    title_options:
+      - Clear Desk, Clear Mind
+      - One Step at a Time
+      - Still Moving Forward
+    bpm_min: 74
+    bpm_max: 80
+    mood:
+      - minimal
+      - clear
+      - meditative
+    instruments:
+      - sparse electric piano
+      - soft kick pulse
+      - brushed shaker
+      - quiet sub bass
+    texture:
+      - clean tape warmth
+      - wide soft ambience
+      - minimal vinyl noise
+    arrangement:
+      - "0:00-0:18 Intro: sparse electric piano, soft ambience, and a barely audible kick pulse"
+      - "0:18-0:48 Establish: add brushed shaker and quiet sub bass without increasing intensity"
+      - "0:48-1:24 Focus: sustain a clear minimal groove with gentle piano voicing changes"
+      - "1:24-1:52 Open space: reduce the pulse and leave wide ambience around the piano"
+      - "1:52-2:38 Continue: restore the minimal beat with slightly deeper bass and soft shaker detail"
+      - "2:38-3:00 Outro: remove layers gradually and finish with a calm unresolved room tone"
+image_variants:
+  - name: warm-lofi-desk
+    visual_style: warm cinematic lo-fi study desk
+    subject: open notebook, headphones, coffee, and a small lamp beside a laptop
+    palette: amber light, walnut brown, cream, muted green
+    texture: soft film grain, cassette nostalgia, shallow depth of field
+  - name: rainy-lofi-window
+    visual_style: intimate rainy window illustration
+    subject: quiet desk facing a rain-covered window with headphones and notebooks
+    palette: slate blue, warm amber, charcoal, muted beige
+    texture: watercolor softness, window reflections, subtle paper grain
+  - name: night-library-lofi
+    visual_style: cinematic late-night library album cover
+    subject: solitary wooden desk surrounded by books, a Rhodes keyboard, and a warm lamp
+    palette: deep navy, tobacco brown, gold, soft black
+    texture: analog grain, dust motes, gentle vignette

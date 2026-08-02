@@ -1,7 +1,15 @@
 duration_seconds: 180
+batch_count: 10
 genre: Study focus ambient
 music_context: deep study and concentration sessions
 image_context: study focus music video
+title_options:
+  - Deep Work Hours
+  - Clear Mind, Quiet Room
+  - One Page at a Time
+  - Focus Without Noise
+  - The Long Afternoon
+  - Steady Light
 bpm_min: 70
 bpm_max: 78
 mood:

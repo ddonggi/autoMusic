@@ -49,6 +49,18 @@ def build_music_prompt(config: dict[str, Any]) -> str:
     return str(build_music_prompt_with_metadata(config)["prompt"])
 
 
+def build_track_title(config: dict[str, Any], music_result: dict[str, Any]) -> str:
+    options = music_result.get("title_options") or config.get("title_options") or []
+    if options:
+        seed = config.get("seed")
+        if seed is None:
+            return str(random.choice(options))
+        rng = random.Random(f"{seed}:title:{music_result.get('music_variant', '')}")
+        return str(options[rng.randrange(len(options))])
+    variant = str(music_result.get("music_variant", "track"))
+    return " ".join(word.capitalize() for word in variant.replace("-", " ").split())
+
+
 def build_music_prompt_with_metadata(config: dict[str, Any]) -> dict[str, Any]:
     variant = _select_variant(config.get("prompt_variants"), config.get("seed"), DEFAULT_MUSIC_VARIANT)
     duration = int(config.get("duration_seconds", 180))
@@ -93,6 +105,7 @@ def build_music_prompt_with_metadata(config: dict[str, Any]) -> dict[str, Any]:
         "instruments": instrument_values,
         "texture": texture_values,
         "arrangement": arrangement_values,
+        "title_options": [str(item) for item in variant.get("title_options", [])],
     }
 
 

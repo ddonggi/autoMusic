@@ -47,12 +47,12 @@ def build_daily_success_notification(track_dir: Path, track: dict) -> Notificati
     return Notification(
         subject=f"[AutoMusic] 음악 생성 성공: {track_id}",
         body=(
-            "일일 음악과 배경 이미지 생성이 완료되었습니다.\n\n"
+            "일일 음악 생성이 완료되었습니다. 배경 이미지는 배치 생성 시 생성됩니다.\n\n"
             f"Track ID: {track_id}\n"
             f"Track Path: {track_dir}\n"
             f"Duration Seconds: {track.get('duration_seconds')}\n"
+            f"Title: {track.get('title')}\n"
             f"Music Variant: {track.get('music_variant')}\n"
-            f"Image Variant: {track.get('image_variant')}\n"
         ),
     )
 

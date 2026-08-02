@@ -110,8 +110,6 @@ function statusMessage(status) {
   const messages = {
     queued: "작업을 기다리고 있습니다.",
     generating_music: "음악을 만들고 있습니다.",
-    generating_image: "이미지를 만들고 있습니다.",
-    rendering_video: "영상을 렌더링하고 있습니다.",
     completed: "작업이 완성되었습니다.",
     failed: "작업을 완료하지 못했습니다.",
   };
@@ -120,7 +118,7 @@ function statusMessage(status) {
 
 function renderAssetLinks(jobId, artifacts) {
   assetLinks.replaceChildren();
-  ["audio", "image", "video"].forEach((asset) => {
+  ["audio"].forEach((asset) => {
     if (!artifacts || !artifacts[asset]) return;
     const link = document.createElement("a");
     link.href = `/api/jobs/${encodeURIComponent(jobId)}/downloads/${asset}`;

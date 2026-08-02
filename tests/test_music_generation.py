@@ -11,6 +11,22 @@ from automusic.music import generate_lyria_track
 
 
 class MusicGenerationTests(unittest.TestCase):
+    def test_track_directory_slug_follows_configured_genre(self):
+        async def producer(prompt, config, music_result, target_seconds):
+            return [b"\0" * 48_000 * 2 * 2]
+
+        with tempfile.TemporaryDirectory() as tmp:
+            track_dir = asyncio.run(
+                generate_lyria_track(
+                    {"duration_seconds": 1, "genre": "Focus lo-fi hip hop"},
+                    Path(tmp) / "tracks",
+                    music_chunk_producer=producer,
+                )
+            )
+
+        self.assertTrue(track_dir.name.endswith("-focus-lo-fi-hip-hop"))
+        self.assertNotIn("brazilian-phonk", track_dir.name)
+
     def test_generate_lyria_track_normalizes_and_stores_custom_music_prompt(self):
         received_prompts = []
 
@@ -80,11 +96,12 @@ class MusicGenerationTests(unittest.TestCase):
                 )
             )
             track = json.loads((track_dir / "track.json").read_text())
-            audio_exists = (track_dir / "audio.wav").exists()
+            audio_exists = (track_dir / track["audio_path"]).exists()
 
         self.assertEqual(attempts, 3)
         self.assertEqual(track["status"], "generated")
-        self.assertEqual(track["audio_path"], "audio.wav")
+        self.assertIn("base-phonk", track["audio_path"])
+        self.assertTrue(track["audio_path"].endswith(".wav"))
         self.assertTrue(audio_exists)
 
     def test_generate_lyria_track_does_not_leave_empty_dir_after_music_failure(self):

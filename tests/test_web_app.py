@@ -9,9 +9,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from automusic.image import generate_image
 from automusic.music import generate_lyria_track
-from automusic.render import render_track
 from automusic.web_app import create_app, create_default_service
 
 
@@ -85,10 +83,10 @@ class WebAppTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            examples = root / "configs" / "examples"
-            examples.mkdir(parents=True)
-            (examples / "music.yaml").write_text("genre: Brazilian phonk\n")
-            (examples / "study.yaml").write_text("genre: Study focus ambient\n")
+            categories = root / "configs" / "categories"
+            categories.mkdir(parents=True)
+            (categories / "phonk.yaml").write_text("genre: Brazilian phonk\n")
+            (categories / "study.yaml").write_text("genre: Study focus ambient\n")
             executor = ImmediateExecutor()
 
             service = create_default_service(root, executor=executor)
@@ -97,8 +95,6 @@ class WebAppTests(unittest.TestCase):
         self.assertEqual(service.presets["phonk"]["genre"], "Brazilian phonk")
         self.assertEqual(service.presets["study"]["genre"], "Study focus ambient")
         self.assertIs(service.track_generator, generate_lyria_track)
-        self.assertIs(service.image_generator, generate_image)
-        self.assertIs(service.track_renderer, render_track)
         self.assertIs(service.executor, executor)
 
     def test_run_web_normalizes_localhost_before_starting_app(self):

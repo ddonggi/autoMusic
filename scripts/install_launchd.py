@@ -18,11 +18,12 @@ def main() -> None:
     parser.add_argument("--label", default="com.automusic.daily")
     parser.add_argument("--hour", default=12, type=int)
     parser.add_argument("--minute", default=0, type=int)
+    parser.add_argument("--python-path", default=None, type=Path)
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
     project_root = args.project_root.resolve()
-    python_path = project_root / ".venv" / "bin" / "python"
+    python_path = args.python_path or project_root / ".venv" / "bin" / "python"
     if not python_path.exists():
         python_path = Path(sys.executable)
     logs_dir = project_root / "logs"

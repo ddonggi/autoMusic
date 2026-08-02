@@ -8,8 +8,7 @@ from typing import Any
 
 TRACK_TRANSITIONS = {
     "new": {"generated"},
-    "generated": {"imaged"},
-    "imaged": {"batched"},
+    "generated": {"batched"},
     "batched": {"uploaded"},
     "uploaded": {"archived"},
 }
@@ -21,7 +20,6 @@ class TrackMetadata:
     status: str
     created_at: str
     audio_path: str | None = None
-    image_path: str | None = None
     batch_id: str | None = None
 
 

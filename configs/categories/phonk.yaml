@@ -1,5 +1,18 @@
 duration_seconds: 180
+batch_count: 10
 genre: Brazilian phonk
+image_context: workout music video
+title_options:
+  - Final Round Energy
+  - One Step Closer
+  - No Excuses Tonight
+  - Last Set, Best Set
+  - Built Under Pressure
+  - Keep the Pace
+  - Earned Not Given
+  - Heavy Focus
+  - Break the Limit
+  - After the Bell
 bpm_min: 132
 bpm_max: 138
 mood:

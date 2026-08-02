@@ -15,9 +15,9 @@ class StateBatchArchiveTests(unittest.TestCase):
     def test_transition_track_status_allows_expected_flow(self):
         track = {"status": "generated"}
 
-        transition_track_status(track, "imaged")
+        transition_track_status(track, "batched")
 
-        self.assertEqual(track["status"], "imaged")
+        self.assertEqual(track["status"], "batched")
 
     def test_transition_track_status_rejects_invalid_jump(self):
         track = {"status": "generated"}
@@ -25,7 +25,7 @@ class StateBatchArchiveTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "generated -> uploaded"):
             transition_track_status(track, "uploaded")
 
-    def test_build_batch_selects_oldest_ten_imaged_tracks(self):
+    def test_build_batch_selects_oldest_ten_generated_tracks(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             tracks_root = root / "workspace" / "tracks"
@@ -38,10 +38,9 @@ class StateBatchArchiveTests(unittest.TestCase):
                     track_dir / "track.json",
                     {
                         "track_id": f"track-{index:02d}",
-                        "status": "imaged",
+                        "status": "generated",
                         "created_at": f"2026-04-27T00:{index:02d}:00+09:00",
                         "audio_path": "audio.wav",
-                        "image_path": "image.png",
                     },
                 )
 
@@ -51,6 +50,30 @@ class StateBatchArchiveTests(unittest.TestCase):
         self.assertEqual(len(batch["track_ids"]), 10)
         self.assertEqual(batch["track_ids"][0], "track-00")
         self.assertEqual(batch["track_ids"][-1], "track-09")
+
+    def test_build_batch_uses_generated_tracks_only(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            tracks_root = root / "workspace" / "tracks"
+            batches_root = root / "workspace" / "batches"
+            tracks_root.mkdir(parents=True)
+            for index in range(3):
+                track_dir = tracks_root / f"track-{index:02d}"
+                track_dir.mkdir()
+                save_json(
+                    track_dir / "track.json",
+                    {
+                        "track_id": f"track-{index:02d}",
+                        "status": "generated" if index < 2 else "legacy",
+                        "created_at": f"2026-04-27T00:0{index}:00+09:00",
+                        "audio_path": "audio.wav",
+                    },
+                )
+
+            batch_path = build_batch(tracks_root, batches_root, batch_count=2)
+            batch = json.loads((batch_path / "batch.json").read_text())
+
+        self.assertEqual(batch["track_ids"], ["track-00", "track-01"])
 
     def test_archive_success_moves_uploaded_batch_and_tracks(self):
         with tempfile.TemporaryDirectory() as tmp:

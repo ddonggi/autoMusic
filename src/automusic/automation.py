@@ -17,7 +17,7 @@ def count_ready_tracks(tracks_root: Path) -> int:
     ready = 0
     for track_json in tracks_root.glob("*/track.json"):
         track = load_json(track_json)
-        if track.get("status") == "imaged" and not track.get("batch_id"):
+        if track.get("status") == "generated" and not track.get("batch_id"):
             ready += 1
     return ready
 
@@ -66,6 +66,10 @@ def run_automation(
             str(upload_config),
             "--root",
             str(root),
+            "--music-config",
+            str(music_config),
+            "--batch-count",
+            str(batch_count),
         ]
         if dry_run:
             batch_command.append("--dry-run")

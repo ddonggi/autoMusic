@@ -6,11 +6,11 @@ from pathlib import Path
 from typing import Any, Callable
 from uuid import UUID, uuid4
 
-from .prompts import build_image_prompt_with_metadata, build_music_prompt, build_music_prompt_with_metadata
+from .prompts import build_music_prompt, build_music_prompt_with_metadata
 from .state import load_json, save_json
 
 
-PUBLIC_ASSETS = {"audio", "image", "video"}
+PUBLIC_ASSETS = {"audio"}
 
 
 class WebJobService:
@@ -20,15 +20,11 @@ class WebJobService:
         presets: dict[str, dict[str, Any]],
         *,
         track_generator: Callable[..., Any],
-        image_generator: Callable[..., Path],
-        track_renderer: Callable[..., Path],
         executor: Any,
     ) -> None:
         self.root = root.resolve()
         self.presets = presets
         self.track_generator = track_generator
-        self.image_generator = image_generator
-        self.track_renderer = track_renderer
         self.executor = executor
 
     @property
@@ -98,22 +94,6 @@ class WebJobService:
             track = load_json(track_dir / "track.json")
             self._set_artifact(job_dir, job, "audio", track_dir / track["audio_path"])
 
-            stage = "generating_image"
-            self._set_status(job_dir, job, stage)
-            image_result = build_image_prompt_with_metadata(track["music_prompt"], track, preset)
-            image_path = track_dir / "image.png"
-            self.image_generator(str(image_result["prompt"]), image_path)
-            track["status"] = "imaged"
-            track["image_prompt"] = image_result["prompt"]
-            track["image_variant"] = image_result["image_variant"]
-            track["image_path"] = image_path.name
-            save_json(track_dir / "track.json", track)
-            self._set_artifact(job_dir, job, "image", image_path)
-
-            stage = "rendering_video"
-            self._set_status(job_dir, job, stage)
-            video_path = Path(self.track_renderer(track_dir))
-            self._set_artifact(job_dir, job, "video", video_path)
             self._set_status(job_dir, job, "completed")
         except Exception:
             self._set_status(job_dir, job, "failed", error=_safe_stage_error(stage))
@@ -158,7 +138,5 @@ class WebJobService:
 def _safe_stage_error(stage: str) -> str:
     messages = {
         "generating_music": "음악 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
-        "generating_image": "이미지 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
-        "rendering_video": "영상 렌더링 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
     }
     return messages.get(stage, "작업 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.")

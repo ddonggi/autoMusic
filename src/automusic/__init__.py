@@ -6,6 +6,7 @@ __all__ = [
     "automation",
     "batch",
     "config",
+    "categories",
     "image",
     "launchd",
     "music",

@@ -17,7 +17,7 @@ def build_batch(
 ) -> Path:
     eligible = _eligible_tracks(tracks_root)
     if len(eligible) < batch_count:
-        raise RuntimeError(f"Need {batch_count} imaged tracks, found {len(eligible)}")
+        raise RuntimeError(f"Need {batch_count} generated tracks, found {len(eligible)}")
     selected = eligible[:batch_count]
     now = now or datetime.now(ZoneInfo("Asia/Seoul"))
     batch_id = f"{now:%Y%m%d-%H%M%S}-batch"
@@ -72,6 +72,6 @@ def _eligible_tracks(tracks_root: Path) -> list[dict[str, Any]]:
     tracks: list[dict[str, Any]] = []
     for track_json in tracks_root.glob("*/track.json"):
         metadata = load_json(track_json)
-        if metadata.get("status") == "imaged" and not metadata.get("batch_id"):
+        if metadata.get("status") == "generated" and not metadata.get("batch_id"):
             tracks.append({"path": track_json.parent, "metadata": metadata})
     return sorted(tracks, key=lambda item: item["metadata"].get("created_at", ""))

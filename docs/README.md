@@ -6,9 +6,8 @@ GitHub에서 보기 좋은 위키형 문서 인덱스입니다. 운영 절차는
 
 | 문서 | 설명 |
 | --- | --- |
-| [프로그램 가이드](program-guide.md) | 설치, 실행, 자동화, 상태 흐름, 실패 재시도, 검증 절차 |
+| [프로그램 가이드](program-guide.md) | 전체 구조, 수동 음악 생성, 배치 자동화, YouTube 업로드, 재시도 |
 | [보안 및 커밋 안전 가이드](security.md) | API 키, OAuth 토큰, SMTP 비밀번호, 생성물 커밋 방지 |
-| [이전 한국어 가이드 경로](program-guide.ko.md) | 기존 링크 호환용 문서. 최신 가이드는 `program-guide.md` |
 
 ## 문서 구조
 
@@ -17,13 +16,12 @@ flowchart TD
     A[README.md] --> B[docs/README.md 문서 홈]
     B --> C[program-guide.md 프로그램 가이드]
     B --> D[security.md 보안 가이드]
-    B --> E[program-guide.ko.md 이전 경로 호환]
-    C --> F[설치/환경변수]
-    C --> G[자동 실행]
-    C --> H[상태 흐름]
-    C --> I[실패 재시도]
-    D --> J[커밋 금지 파일]
-    D --> K[비밀값 스캔]
+    C --> E[설치/환경변수]
+    C --> F[수동 음악 생성]
+    C --> G[배치 자동화]
+    C --> H[실패 재시도]
+    D --> I[커밋 금지 파일]
+    D --> J[비밀값 스캔]
 ```
 
 ## 운영자가 자주 보는 항목

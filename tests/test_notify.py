@@ -46,7 +46,6 @@ class NotifyTests(unittest.TestCase):
                 "track_id": "track-001",
                 "duration_seconds": 180.0,
                 "music_variant": "rave-metamorphosis",
-                "image_variant": "cyberpunk-gym",
             },
         )
 
@@ -54,7 +53,6 @@ class NotifyTests(unittest.TestCase):
         self.assertIn("track-001", message.body)
         self.assertIn("180.0", message.body)
         self.assertIn("rave-metamorphosis", message.body)
-        self.assertIn("cyberpunk-gym", message.body)
 
     def test_build_daily_failure_notification_includes_stage_and_error(self):
         message = build_daily_failure_notification(

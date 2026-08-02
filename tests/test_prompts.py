@@ -42,7 +42,7 @@ class PromptTests(unittest.TestCase):
 
     def test_study_preset_loads_complete_variants_and_contexts(self):
         config = load_config(
-            Path(__file__).resolve().parents[1] / "configs" / "examples" / "study.yaml"
+            Path(__file__).resolve().parents[1] / "configs" / "categories" / "study.yaml"
         )
 
         self.assertEqual(config["genre"], "Study focus ambient")

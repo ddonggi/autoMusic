@@ -1,3 +1,4 @@
+import json
 import sys
 import tempfile
 import unittest
@@ -74,6 +75,7 @@ class BatchUploadResumeTests(unittest.TestCase):
             batch_path = root / "workspace" / "batches" / "batch-001"
             batch_path.mkdir(parents=True)
             (batch_path / "video.mp4").write_bytes(b"video")
+            (batch_path / "image.png").write_bytes(b"image")
             save_json(
                 batch_path / "batch.json",
                 {
@@ -81,6 +83,7 @@ class BatchUploadResumeTests(unittest.TestCase):
                     "status": "rendered",
                     "track_ids": ["track-001"],
                     "video_path": "video.mp4",
+                    "image_path": "image.png",
                     "youtube_video_id": None,
                     "archive_pending": False,
                     "created_at": "2026-05-01T00:00:00+09:00",
@@ -108,6 +111,76 @@ class BatchUploadResumeTests(unittest.TestCase):
         self.assertIn(("archive", "batch-001"), calls)
         self.assertIn("batch-001", notifications[0].body)
         self.assertIn("video-123", notifications[0].body)
+
+    def test_run_batch_upload_generates_shared_image_once_and_persists_prompt(self):
+        image_calls = []
+
+        def fake_image(prompt, output_path):
+            image_calls.append((prompt, output_path))
+            output_path.write_bytes(b"shared image")
+            return output_path
+
+        def fake_render(batch_path, tracks_root):
+            batch = {
+                **json.loads((batch_path / "batch.json").read_text()),
+                "status": "rendered",
+                "video_path": "video.mp4",
+            }
+            (batch_path / "video.mp4").write_bytes(b"video")
+            save_json(batch_path / "batch.json", batch)
+            return batch_path / "video.mp4"
+
+        def fake_upload(batch_path, config):
+            return "video-123"
+
+        def fake_archive(batch_path, tracks_root, success_root):
+            return success_root / "batches" / batch_path.name
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            batch_path = root / "workspace" / "batches" / "batch-001"
+            batch_path.mkdir(parents=True)
+            save_json(
+                batch_path / "batch.json",
+                {
+                    "batch_id": "batch-001",
+                    "status": "assembled",
+                    "track_ids": ["track-001"],
+                    "youtube_video_id": None,
+                    "created_at": "2026-05-01T00:00:00+09:00",
+                },
+            )
+            track_dir = root / "workspace" / "tracks" / "track-001"
+            track_dir.mkdir(parents=True)
+            save_json(
+                track_dir / "track.json",
+                {
+                    "track_id": "track-001",
+                    "status": "batched",
+                    "music_prompt": "Create a focused study track.",
+                    "genre": "Study focus ambient",
+                    "mood": ["focused"],
+                    "texture": ["soft"],
+                },
+            )
+
+            run_batch_upload(
+                root,
+                {"image_context": "study focus music video"},
+                image_generator=fake_image,
+                render_func=fake_render,
+                require_youtube_env=lambda names: None,
+                upload_func=fake_upload,
+                archive_func=fake_archive,
+                notifier=lambda message: None,
+            )
+
+            batch = json.loads((batch_path / "batch.json").read_text())
+
+        self.assertEqual(len(image_calls), 1)
+        self.assertIn("study focus music video", image_calls[0][0])
+        self.assertEqual(batch["image_path"], "image.png")
+        self.assertEqual(batch["image_prompt"], image_calls[0][0])
 
     def test_run_batch_upload_archives_uploaded_pending_batch_without_upload(self):
         calls = []
@@ -153,6 +226,7 @@ class BatchUploadResumeTests(unittest.TestCase):
             batch_path = root / "workspace" / "batches" / "batch-001"
             batch_path.mkdir(parents=True)
             (batch_path / "video.mp4").write_bytes(b"video")
+            (batch_path / "image.png").write_bytes(b"image")
             save_json(
                 batch_path / "batch.json",
                 {
@@ -160,6 +234,7 @@ class BatchUploadResumeTests(unittest.TestCase):
                     "status": "rendered",
                     "track_ids": [],
                     "video_path": "video.mp4",
+                    "image_path": "image.png",
                     "youtube_video_id": None,
                     "archive_pending": False,
                     "created_at": "2026-05-01T00:00:00+09:00",

@@ -23,7 +23,14 @@ def load_config(path: Path) -> dict[str, Any]:
     if suffix == ".json":
         return json.loads(text)
     if suffix in {".yaml", ".yml"}:
-        return _load_yaml(text)
+        loaded = _load_yaml(text)
+        source = loaded.pop("source", None)
+        if source is not None:
+            source_path = (path.parent / str(source)).resolve()
+            base = load_config(source_path)
+            base.update(loaded)
+            return base
+        return loaded
     raise ValueError(f"Unsupported config format: {path.suffix}")
 
 

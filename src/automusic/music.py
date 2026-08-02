@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import re
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -8,13 +9,23 @@ from typing import Any, Awaitable, Callable
 from zoneinfo import ZoneInfo
 
 from .audio import write_pcm16_wav
-from .prompts import build_music_prompt_with_metadata
+from .prompts import build_music_prompt_with_metadata, build_track_title
 from .state import save_json
 
 MusicChunkProducer = Callable[[str, dict[str, Any], dict[str, Any], int], Awaitable[list[bytes]]]
 
 
-def make_track_id(now: datetime, slug: str = "brazilian-phonk") -> str:
+def build_audio_filename(title: str, now: datetime) -> str:
+    title_slug = _filename_slug(title)
+    return f"{title_slug}-{now:%Y%m%d-%H%M%S}.wav"
+
+
+def _filename_slug(value: str) -> str:
+    words = re.findall(r"[a-z0-9]+", value.lower())
+    return "-".join(words)[:48] or "music"
+
+
+def make_track_id(now: datetime, slug: str = "music") -> str:
     return f"{now:%Y%m%d-%H%M%S}-{slug}"
 
 
@@ -26,8 +37,9 @@ async def generate_lyria_track(
     music_chunk_producer: MusicChunkProducer | None = None,
 ) -> Path:
     now = datetime.now(ZoneInfo("Asia/Seoul"))
-    base_track_id = make_track_id(now)
     music_result = build_music_prompt_with_metadata(config)
+    genre_slug = _filename_slug(str(config.get("genre", "music")))
+    base_track_id = make_track_id(now, genre_slug)
     normalized_music_prompt = music_prompt.strip() if music_prompt is not None else ""
     prompt = normalized_music_prompt or str(music_result["prompt"])
     target_seconds = int(config.get("duration_seconds", 180))
@@ -36,7 +48,9 @@ async def generate_lyria_track(
 
     track_dir = _make_unique_dir(workspace_tracks, base_track_id)
     track_id = track_dir.name
-    audio_path = track_dir / "audio.wav"
+    title = build_track_title(config, music_result)
+    audio_filename = build_audio_filename(title, now)
+    audio_path = track_dir / audio_filename
     duration_seconds = write_pcm16_wav(pcm_chunks, audio_path)
     save_json(
         track_dir / "track.json",
@@ -47,12 +61,10 @@ async def generate_lyria_track(
             "mood": music_result["mood"],
             "texture": music_result["texture"],
             "music_variant": music_result["music_variant"],
-            "image_variant": None,
+            "title": title,
             "music_prompt": prompt,
-            "image_prompt": None,
             "duration_seconds": duration_seconds,
-            "audio_path": "audio.wav",
-            "image_path": None,
+            "audio_path": audio_filename,
             "batch_id": None,
             "created_at": now.isoformat(),
         },

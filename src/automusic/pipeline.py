@@ -7,7 +7,8 @@ from zoneinfo import ZoneInfo
 from .archive import archive_success
 from .audio import write_pcm16_wav
 from .batch import build_batch
-from .prompts import build_image_prompt_with_metadata, build_music_prompt_with_metadata
+from .music import build_audio_filename
+from .prompts import build_image_prompt_with_metadata, build_music_prompt_with_metadata, build_track_title
 from .state import load_json, save_json
 
 
@@ -22,7 +23,11 @@ def dry_run_music(config: dict, tracks_root: Path) -> Path:
         "mood": music_result["mood"],
         "texture": music_result["texture"],
     }
-    duration_seconds = write_pcm16_wav([b"\x00\x00\x00\x00" * 48_000], track_dir / "audio.wav")
+    title = build_track_title(config, music_result)
+    audio_filename = build_audio_filename(title, now)
+    duration_seconds = write_pcm16_wav(
+        [b"\x00\x00\x00\x00" * 48_000], track_dir / audio_filename
+    )
     save_json(
         track_dir / "track.json",
         {
@@ -32,12 +37,10 @@ def dry_run_music(config: dict, tracks_root: Path) -> Path:
             "mood": metadata["mood"],
             "texture": metadata["texture"],
             "music_variant": music_result["music_variant"],
-            "image_variant": None,
+            "title": title,
             "music_prompt": music_prompt,
-            "image_prompt": None,
             "duration_seconds": duration_seconds,
-            "audio_path": "audio.wav",
-            "image_path": None,
+            "audio_path": audio_filename,
             "batch_id": None,
             "created_at": now.isoformat(),
         },
@@ -45,25 +48,8 @@ def dry_run_music(config: dict, tracks_root: Path) -> Path:
     return track_dir
 
 
-def dry_run_image(track_dir: Path, config: dict | None = None) -> Path:
-    track_json = track_dir / "track.json"
-    track = load_json(track_json)
-    image_result = build_image_prompt_with_metadata(track["music_prompt"], track, config or {})
-    image_prompt = str(image_result["prompt"])
-    image_path = track_dir / "image.png"
-    image_path.write_bytes(_one_pixel_png())
-    track["status"] = "imaged"
-    track["image_prompt"] = image_prompt
-    track["image_variant"] = image_result["image_variant"]
-    track["image_path"] = "image.png"
-    save_json(track_json, track)
-    return image_path
-
-
 def dry_run_daily(config: dict, tracks_root: Path) -> Path:
-    track_dir = dry_run_music(config, tracks_root)
-    dry_run_image(track_dir, config)
-    return track_dir
+    return dry_run_music(config, tracks_root)
 
 
 def _make_unique_dir(root: Path, base_name: str) -> Path:
@@ -81,11 +67,20 @@ def _make_unique_dir(root: Path, base_name: str) -> Path:
         index += 1
 
 
-def dry_run_batch_upload(root: Path) -> Path:
+def dry_run_batch_upload(root: Path, config: dict | None = None, batch_count: int = 10) -> Path:
     tracks_root = root / "workspace" / "tracks"
     batches_root = root / "workspace" / "batches"
-    batch_path = build_batch(tracks_root, batches_root, batch_count=10)
+    config = config or {}
+    batch_path = build_batch(tracks_root, batches_root, batch_count=batch_count)
     batch = load_json(batch_path / "batch.json")
+    first_track = load_json(tracks_root / batch["track_ids"][0] / "track.json")
+    image_result = build_image_prompt_with_metadata(
+        str(first_track.get("music_prompt") or ""), first_track, config
+    )
+    (batch_path / "image.png").write_bytes(_one_pixel_png())
+    batch["image_path"] = "image.png"
+    batch["image_prompt"] = image_result["prompt"]
+    batch["image_variant"] = image_result["image_variant"]
     (batch_path / "video.mp4").write_bytes(b"dry-run video")
     batch["status"] = "uploaded"
     batch["youtube_video_id"] = "dry-run-video-id"

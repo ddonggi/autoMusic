@@ -55,23 +55,6 @@ def build_concat_command(*, concat_file: Path, output_path: Path) -> list[str]:
     ]
 
 
-def render_track(
-    track_dir: Path,
-    *,
-    runner=subprocess.run,
-) -> Path:
-    track = load_json(track_dir / "track.json")
-    output_path = track_dir / "video.mp4"
-    command = build_segment_command(
-        image_path=track_dir / track["image_path"],
-        audio_path=track_dir / track["audio_path"],
-        output_path=output_path,
-        duration=float(track.get("duration_seconds") or 180.0),
-    )
-    runner(command, check=True)
-    return output_path
-
-
 def render_batch(
     batch_path: Path,
     tracks_root: Path,
@@ -80,19 +63,18 @@ def render_batch(
 ) -> Path:
     batch = load_json(batch_path / "batch.json")
     audio_paths: list[Path] = []
-    image_paths: list[Path] = []
+    image_path = batch_path / str(batch.get("image_path") or "")
+    if not image_path.is_file():
+        raise RuntimeError(f"Batch image does not exist: {image_path}")
     image_durations: list[float] = []
     for track_id in batch["track_ids"]:
         track_dir = tracks_root / track_id
         track = load_json(track_dir / "track.json")
         audio_paths.append(track_dir / track["audio_path"])
-        image_paths.append(track_dir / track["image_path"])
         image_durations.append(float(track.get("duration_seconds") or 180.0))
 
     segment_paths: list[Path] = []
-    for index, (image_path, audio_path, duration) in enumerate(
-        zip(image_paths, audio_paths, image_durations, strict=True)
-    ):
+    for index, (audio_path, duration) in enumerate(zip(audio_paths, image_durations, strict=True)):
         segment_path = batch_path / f"segment_{index:03d}.mp4"
         command = build_segment_command(
             image_path=image_path,
