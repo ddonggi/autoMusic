@@ -73,10 +73,16 @@ class PromptTests(unittest.TestCase):
                 "night-study-rhodes",
                 "minimal-pulse-focus",
                 "soft-cafe-jazz",
+                "quiet-string-study",
+                "acoustic-reading",
+                "floating-vibraphone",
+                "minimal-piano-solo",
+                "warm-organ-focus",
+                "soft-electronic-flow",
             ],
         )
         for variant in config["prompt_variants"]:
-            self.assertEqual(len(variant["arrangement"]), 6)
+            self.assertIn(len(variant["arrangement"]), (4, 5, 6))
             time_ranges = [re.match(r"^(\d:\d{2})-(\d:\d{2}) ", line) for line in variant["arrangement"]]
             self.assertTrue(all(time_ranges))
             self.assertEqual(time_ranges[0].group(1), "0:00")

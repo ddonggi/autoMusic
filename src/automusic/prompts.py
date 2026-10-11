@@ -69,7 +69,8 @@ def build_music_prompt_with_metadata(config: dict[str, Any]) -> dict[str, Any]:
     bpm_max = variant.get("bpm_max", config.get("bpm_max"))
     bpm = f"{bpm_min}-{bpm_max} BPM" if bpm_min and bpm_max else "high-energy BPM"
     mood_values = _merge_lists(config.get("mood", []), variant.get("mood", []))
-    instrument_values = _merge_lists(config.get("instruments", []), variant.get("instruments", []))
+    base_instruments = [] if variant.get("replace_instruments", config.get("replace_instruments", False)) else config.get("instruments", [])
+    instrument_values = _merge_lists(base_instruments, variant.get("instruments", []))
     texture_values = _merge_lists(config.get("texture", []), variant.get("texture", []))
     mood = _join(mood_values)
     instruments = _join(instrument_values)

@@ -1,6 +1,7 @@
 duration_seconds: 180
 batch_count: 10
 genre: Study focus ambient
+replace_instruments: true
 music_context: deep study and concentration sessions
 image_context: study focus music video
 title_options:
@@ -41,6 +42,7 @@ negative_rules:
   - avoid dramatic builds and climaxes
 prompt_variants:
   - name: lofi-library
+    title_options: ["Sunlit Pages", "The Library Breathes"]
     bpm_min: 70
     bpm_max: 74
     mood:
@@ -62,6 +64,7 @@ prompt_variants:
       - "1:55-2:30 Renew: return the warm pad and slow harmonic movement"
       - "2:30-3:00 Outro: let the piano and room tone fade naturally without abrupt cutoff"
   - name: rain-window-piano
+    title_options: ["Rain on the Margin", "Window Notes"]
     bpm_min: 72
     bpm_max: 76
     mood:
@@ -83,6 +86,7 @@ prompt_variants:
       - "1:50-2:35 Renew: restore the gentle pulse and broaden the soft piano voicing"
       - "2:35-3:00 Outro: reduce the piano into quiet rain ambience and a natural fade"
   - name: deep-work-synth
+    title_options: ["A Clear Thought", "Quiet Circuits"]
     bpm_min: 70
     bpm_max: 75
     mood:
@@ -104,6 +108,7 @@ prompt_variants:
       - "1:52-2:32 Renew: restore the warm pad with a slightly wider harmonic field"
       - "2:32-3:00 Outro: let the keys soften into close quiet studio air"
   - name: night-study-rhodes
+    title_options: ["Lamplight Study", "After the Last Page"]
     bpm_min: 74
     bpm_max: 78
     mood:
@@ -111,20 +116,21 @@ prompt_variants:
       - optimistic
       - composed
     instruments:
-      - airy piano notes
+      - soft nocturnal Rhodes electric piano
       - transparent synth pad
       - soft brushed pulse
     texture:
-      - bright open air
+      - quiet nighttime room ambience
       - clean gentle reverb
     arrangement:
-      - "0:00-0:18 Intro: airy piano notes rest inside a transparent synth pad"
+      - "0:00-0:18 Intro: soft Rhodes notes rest inside a transparent synth pad"
       - "0:18-0:48 Settle: add a soft brushed pulse that stays behind the harmony"
       - "0:48-1:20 Focus: keep a clear piano pattern with slow chord transitions"
       - "1:20-1:48 Rest: suspend the pulse and leave spacious sustained notes"
       - "1:48-2:36 Renew: return the brushed pulse with gentle brighter voicings"
       - "2:36-3:00 Outro: release the notes into clean gentle reverb and a calm fade"
   - name: minimal-pulse-focus
+    title_options: ["Still Concentration", "The Quiet Pulse"]
     bpm_min: 70
     bpm_max: 74
     mood:
@@ -146,6 +152,7 @@ prompt_variants:
       - "1:54-2:34 Renew: bring back the pad with slightly warmer sustained harmony"
       - "2:34-3:00 Outro: allow the low piano resonance to fade without a sudden ending"
   - name: soft-cafe-jazz
+    title_options: ["Coffee and Chapters", "A Table by the Window"]
     bpm_min: 72
     bpm_max: 77
     mood:
@@ -153,19 +160,109 @@ prompt_variants:
       - balanced
       - attentive
     instruments:
-      - gentle marimba-like keys
-      - soft organic pad
-      - minimal low pulse
+      - mellow jazz piano with restrained extended chords
+      - quiet upright bass
+      - barely audible brushed jazz drums
     texture:
       - calm botanical air
       - natural soft resonance
     arrangement:
-      - "0:00-0:20 Intro: gentle marimba-like keys float in calm botanical air"
-      - "0:20-0:50 Settle: add a soft organic pad and minimal low pulse"
-      - "0:50-1:24 Focus: continue a balanced key motif with small tonal shifts"
-      - "1:24-1:52 Rest: remove the pulse and leave the organic pad breathing"
-      - "1:52-2:35 Renew: restore the keys with warm natural soft resonance"
+      - "0:00-0:20 Intro: mellow jazz piano plays restrained extended chords"
+      - "0:20-0:50 Settle: add quiet upright bass and barely audible brushes"
+      - "0:50-1:24 Focus: continue a gentle jazz piano motif with small harmonic shifts"
+      - "1:24-1:52 Rest: remove the brushes and leave piano and bass breathing"
+      - "1:52-2:35 Renew: restore the brushes beneath warm piano voicings"
       - "2:35-3:00 Outro: thin the layers gradually into a quiet natural fade"
+  - name: quiet-string-study
+    title_options: ["Quiet Strings", "Paper and Bow"]
+    bpm_min: 64
+    bpm_max: 70
+    instruments:
+      - "soft sustained viola"
+      - "muted cello"
+      - "sparse felt piano"
+    texture:
+      - patient chamber ambience
+    arrangement:
+      - "0:00-0:35 Opening: sparse piano with quiet cello roots"
+      - "0:35-1:20 Layering: gradually add sustained viola without a crescendo"
+      - "1:20-2:15 Development: move through slow chamber harmonies at constant volume"
+      - "2:15-3:00 Resolution: let strings settle and end on a soft piano cadence"
+  - name: acoustic-reading
+    title_options: ["Wood and Words", "An Open Chapter"]
+    bpm_min: 66
+    bpm_max: 72
+    instruments:
+      - "solo nylon-string guitar, no piano, no pads, no drums"
+    texture:
+      - intimate wooden room resonance
+    arrangement:
+      - "0:00-0:30 Introduction: a quiet fingerpicked guitar motif"
+      - "0:30-1:15 Theme A: gentle alternating bass and spacious melody"
+      - "1:15-2:00 Theme B: shift chord voicings without adding instruments"
+      - "2:00-2:40 Return A: revisit the motif with subtle ornamentation"
+      - "2:40-3:00 Coda: resolve with natural guitar resonance"
+  - name: floating-vibraphone
+    title_options: ["Floating Notes", "Soft Reflections"]
+    bpm_min: 68
+    bpm_max: 74
+    instruments:
+      - "soft vibraphone"
+      - "airy sustained pad"
+      - "quiet bowed bass"
+    texture:
+      - delicate resonant air
+    arrangement:
+      - "0:00-0:40 Opening: widely spaced vibraphone notes"
+      - "0:40-1:30 Expansion: add a soft pad beneath a restrained motif"
+      - "1:30-2:20 Dialogue: alternate short vibraphone phrases with sustained bass"
+      - "2:20-3:00 Dissolve: space the notes further apart and resolve softly"
+  - name: minimal-piano-solo
+    title_options: ["Space Between Notes", "A Quiet Margin"]
+    bpm_min: 60
+    bpm_max: 68
+    instruments:
+      - "solo felt piano only, no pads, no bass instruments, no percussion"
+    texture:
+      - close natural piano resonance
+    arrangement:
+      - "0:00-0:30 Prelude: introduce a sparse piano figure"
+      - "0:30-1:10 Variation I: change inner voices beneath the same motif"
+      - "1:10-1:55 Variation II: move gently to the lower register"
+      - "1:55-2:35 Reprise: bring the motif back with fewer notes"
+      - "2:35-3:00 Cadence: resolve naturally with sustained piano decay"
+  - name: warm-organ-focus
+    title_options: ["Steady Glow", "Slow Turning Pages"]
+    bpm_min: 60
+    bpm_max: 66
+    instruments:
+      - "soft organ with subdued upper harmonics"
+      - "gentle sustained low organ tones"
+    texture:
+      - warm low-contrast room reverb
+    arrangement:
+      - "0:00-0:45 Opening: a quiet organ chord settles gradually"
+      - "0:45-1:35 Drift: change one inner voice at a time at constant volume"
+      - "1:35-2:25 Deep focus: maintain soft low tones beneath slow harmonic movement"
+      - "2:25-3:00 Closing: resolve the chord and gently release the sustained tones"
+  - name: soft-electronic-flow
+    title_options: ["Gentle Current", "Forward in Silence"]
+    bpm_min: 74
+    bpm_max: 82
+    instruments:
+      - "muted synth plucks"
+      - "soft electronic pulse"
+      - "rounded synth bass"
+      - "transparent pad"
+    texture:
+      - clean soft electronic warmth
+    arrangement:
+      - "0:00-0:20 Opening: muted plucks introduce a quiet motif"
+      - "0:20-0:55 Foundation: add a soft pulse and rounded bass"
+      - "0:55-1:35 Theme A: sustain the groove with small pad changes"
+      - "1:35-2:10 Theme B: alter pluck spacing without a drop"
+      - "2:10-2:40 Return: bring back the opening motif at equal volume"
+      - "2:40-3:00 Outro: remove layers gradually and resolve softly"
 image_variants:
   - name: minimal-study-desk
     visual_style: warm cinematic study interior
