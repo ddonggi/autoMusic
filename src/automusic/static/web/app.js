@@ -1,6 +1,6 @@
 "use strict";
 const $ = (id) => document.getElementById(id);
-const state = { categories: [], preview: null, pending: null, busy: false, previewBusy: false, sequence: 0, library: [], libraryBusy: false, scheduler: null, schedulerBusy: false, jobsBusy: false };
+const state = { categories: [], preview: null, pending: null, busy: false, previewBusy: false, sequence: 0, library: [], libraryBusy: false, libraryError: null, libraryLoaded: false, scheduler: null, schedulerBusy: false, jobsBusy: false };
 const labels = { queued: "대기 중", generating_music: "음악 생성 중", completed: "완료", failed: "실패", interrupted: "재시작으로 중단" };
 const active = (job) => ["queued", "generating_music"].includes(job.status);
 const text = (id, value) => { if ($(id).textContent !== String(value)) $(id).textContent = value; };
@@ -176,19 +176,30 @@ function renderRecords(target, records, jobs = false) {
     const article = element("article", null, "record"); article.dataset.id = String(record.id); article.dataset.fingerprint = fingerprint;
     const heading = element("div", null, "record-heading"); heading.append(element("h3", record.title || "제목 없는 음악"));
     heading.append(element("span", jobs ? (labels[record.status] || "상태 확인 필요") : sourceLabel(record.source), "badge")); article.append(heading);
-    const meta = element("p", [record.category_id || "카테고리 정보 없음", record.variant_id || "변형 정보 없음", dateLabel(record.created_at), duration(record.duration_seconds), record.model].filter(Boolean).join(" · "), "note");
+    const meta = element("p", [record.category_id || "카테고리 정보 없음", record.variant_id || "변형 정보 없음", duration(record.duration_seconds), dateLabel(record.created_at)].filter(Boolean).join(" · "), "note");
     const timer = element("span", elapsed(record)); timer.dataset.elapsed = ""; meta.append(timer); article.append(meta);
     if (jobs && ["failed", "interrupted"].includes(record.status)) article.append(element("p", record.error || "작업이 완료되지 않았습니다.", "note"));
     if (!jobs || record.status === "completed") {
       if (!safeURL(record.audio_url) && !safeURL(record.download_url)) article.append(element("p", "결과 파일을 확인해 주세요", "note"));
       else media(record, article);
     }
-    if (record.music_prompt) { const details = element("details"); details.append(element("summary", "실제 프롬프트 보기"), element("p", record.music_prompt, "prompt-copy")); article.append(details); }
+    if (record.music_prompt || record.model) {
+      const details = element("details");
+      details.append(element("summary", record.music_prompt ? "실제 프롬프트 보기" : "음원 정보 보기"));
+      if (record.model) details.append(element("p", `모델 · ${record.model}`, "note"));
+      if (record.music_prompt) details.append(element("p", record.music_prompt, "prompt-copy"));
+      article.append(details);
+    }
     return article;
   });
   // Reconcile without detaching unchanged players, so polling does not stop playback.
   nodes.forEach((node, index) => { if (container.children[index] !== node) container.insertBefore(node, container.children[index] || null); });
   const keep = new Set(nodes); Array.from(container.children).forEach((node) => { if (!keep.has(node)) node.remove(); });
+}
+function jobSummary(jobs) {
+  const counts = new Map();
+  jobs.forEach((job) => { const label = labels[job.status] || "상태 확인 필요"; counts.set(label, (counts.get(label) || 0) + 1); });
+  return [...counts].sort(([a], [b]) => a.localeCompare(b, "ko")).map(([label, count]) => `${label} ${count}개`).join(" · ");
 }
 async function loadJobs() {
   if (state.jobsBusy) return;
@@ -198,7 +209,8 @@ async function loadJobs() {
     const newlyCompleted = jobs.some((job) => job.status === "completed" && ["queued", "generating_music"].includes(state.jobStatuses?.get(job.id)));
     state.jobStatuses = new Map(jobs.map((job) => [job.id, job.status]));
     if (newlyCompleted) loadLibrary();
-    text("jobs-message", jobs.length ? `작업 ${jobs.length}개 · 마지막 조회 ${new Date().toLocaleTimeString("ko-KR")}` : "아직 생성한 작업이 없습니다.");
+    text("jobs-message", jobs.length ? `작업 ${jobs.length}개 · ${jobSummary(jobs)}` : "아직 생성한 작업이 없습니다.");
+    text("jobs-updated", `마지막 조회 ${new Date().toLocaleTimeString("ko-KR")}`);
     if (state.pending?.jobId) {
       const current = jobs.find((job) => job.id === state.pending.jobId);
       if (current) {
@@ -220,7 +232,8 @@ async function loadDashboard() {
     text("track-count", data.track_count ?? "확인 필요"); text("total-duration", duration(data.total_duration_seconds)); text("active-count", Array.isArray(data.active_jobs) ? data.active_jobs.length : "확인 필요");
     const jobs = [...(data.active_jobs || []), ...(data.recent_errors || [])];
     renderRecords("dashboard-jobs", [...new Map(jobs.map((job) => [job.id, job])).values()], true);
-    text("dashboard-message", `마지막 조회 ${new Date().toLocaleTimeString("ko-KR")} · ${jobs.length ? "진행 단계와 최근 오류를 확인하세요." : "진행 작업과 최근 오류가 없습니다."}`);
+    text("dashboard-message", jobs.length ? jobSummary([...new Map(jobs.map((job) => [job.id, job])).values()]) : "진행 작업과 최근 오류가 없습니다.");
+    text("dashboard-updated", `마지막 조회 ${new Date().toLocaleTimeString("ko-KR")}`);
   } catch (error) { text("dashboard-message", error.message); }
   finally { $("dashboard").setAttribute("aria-busy", "false"); }
 }
@@ -229,7 +242,12 @@ function renderLibrary() {
   const search = $("library-search").value.trim().toLocaleLowerCase(); const source = $("source-filter").value;
   const filtered = state.library.filter((item) => (source === "all" || item.source === source) && [item.title, item.category_id, item.variant_id].filter(Boolean).join(" ").toLocaleLowerCase().includes(search));
   renderRecords("library-list", filtered);
-  text("library-message", `${state.library.length}곡 중 ${filtered.length}곡 표시${state.libraryWarning || ""}${!state.library.length ? " · 재생 가능한 음악이 없습니다." : !filtered.length ? " · 조건에 맞는 음악이 없습니다." : ""}`);
+  const count = `${state.library.length}곡 중 ${filtered.length}곡 표시${state.libraryWarning || ""}`;
+  if (state.libraryError) {
+    text("library-message", `${state.libraryError} ${state.libraryLoaded ? `마지막으로 불러온 목록입니다. ${count}` : "목록을 불러오지 못했습니다."} 목록 새로고침으로 다시 확인하세요.`);
+  } else {
+    text("library-message", `${count}${!state.library.length ? " · 재생 가능한 음악이 없습니다." : !filtered.length ? " · 조건에 맞는 음악이 없습니다." : ""}`);
+  }
 }
 async function loadLibrary() {
   if (state.libraryBusy) return;
@@ -241,8 +259,9 @@ async function loadLibrary() {
     $("source-filter").replaceChildren(new Option("모든 출처", "all"));
     [...new Set(state.library.map((item) => item.source).filter(Boolean))].forEach((source) => $("source-filter").add(new Option(sourceLabel(source), source)));
     if (Array.from($("source-filter").options).some((option) => option.value === selected)) $("source-filter").value = selected;
+    state.libraryError = null; state.libraryLoaded = true;
     renderLibrary();
-  } catch (error) { text("library-message", error.message); }
+  } catch (error) { state.libraryError = error.message; renderLibrary(); }
   finally { state.libraryBusy = false; $("library-list").setAttribute("aria-busy", "false"); }
 }
 function schedulerControls() {

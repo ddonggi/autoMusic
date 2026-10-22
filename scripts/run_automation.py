@@ -41,7 +41,9 @@ def main() -> None:
         upload_options = load_config(upload_config)
     except Exception:
         upload_options = {}
-    batch_upload_enabled = isinstance(upload_options, dict) and upload_options.get("batch_upload_enabled") is True
+    # Manual compilation only: do not start image/render/upload from daily automation.
+    # batch_upload_enabled = isinstance(upload_options, dict) and upload_options.get("batch_upload_enabled") is True
+    batch_upload_enabled = False
 
     load_dotenv(project_root / ".env")
     music_options = load_config(music_config)
