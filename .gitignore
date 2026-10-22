@@ -39,6 +39,7 @@ workspace/
 success/
 data/
 outputs/
+_workspace/
 tmp/
 logs/
 *.wav

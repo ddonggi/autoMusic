@@ -25,6 +25,7 @@ class AutomationScheduleTests(unittest.TestCase):
                 music_config=Path("/project/configs/categories/phonk.yaml"),
                 upload_config=Path("/project/configs/upload.yaml"),
                 batch_count=10,
+                batch_upload_enabled=True,
                 python_path=Path("/python"),
                 runner=lambda command, check, cwd: calls.append((command, check, cwd)),
             )
@@ -46,6 +47,7 @@ class AutomationScheduleTests(unittest.TestCase):
                 music_config=Path("/project/configs/categories/phonk.yaml"),
                 upload_config=Path("/project/configs/upload.yaml"),
                 batch_count=10,
+                batch_upload_enabled=True,
                 python_path=Path("/python"),
                 runner=lambda command, check, cwd: calls.append((command, check, cwd)),
             )
@@ -78,6 +80,7 @@ class AutomationScheduleTests(unittest.TestCase):
                 music_config=Path("/project/configs/categories/phonk.yaml"),
                 upload_config=Path("/project/configs/upload.yaml"),
                 batch_count=10,
+                batch_upload_enabled=True,
                 python_path=Path("/python"),
                 runner=lambda command, check, cwd: calls.append((command, check, cwd)),
             )

@@ -1,137 +1,332 @@
-const presetList = document.querySelector("#preset-list");
-const promptField = document.querySelector("#music-prompt");
-const createButton = document.querySelector("#create-job");
-const formError = document.querySelector("#form-error");
-const jobStatus = document.querySelector("#job-status");
-const assetLinks = document.querySelector("#asset-links");
-
-let presets = [];
-let selectedPresetId = null;
-
-async function loadPresets() {
+"use strict";
+const $ = (id) => document.getElementById(id);
+const state = { categories: [], preview: null, pending: null, busy: false, previewBusy: false, sequence: 0, library: [], libraryBusy: false, scheduler: null, schedulerBusy: false, jobsBusy: false };
+const labels = { queued: "대기 중", generating_music: "음악 생성 중", completed: "완료", failed: "실패", interrupted: "재시작으로 중단" };
+const active = (job) => ["queued", "generating_music"].includes(job.status);
+const text = (id, value) => { if ($(id).textContent !== String(value)) $(id).textContent = value; };
+function element(tag, content, className) {
+  const node = document.createElement(tag);
+  if (content != null) node.textContent = content;
+  if (className) node.className = className;
+  return node;
+}
+function safeURL(value) {
+  if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) return null;
+  try { const url = new URL(value, location.origin); return url.origin === location.origin && url.pathname.startsWith("/api/") ? url.href : null; } catch { return null; }
+}
+function dateLabel(value) {
+  if (!value) return "시각 정보 없음";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "시각 정보 없음" : date.toLocaleString("ko-KR");
+}
+function duration(value) {
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) return "길이 정보 없음";
+  const seconds = Math.round(value);
+  return `${Math.floor(seconds / 60)}분 ${seconds % 60}초`;
+}
+function elapsed(job) {
+  if (!active(job) || !job.started_at) return "";
+  const start = Date.parse(job.started_at);
+  return Number.isFinite(start) ? ` · 경과 ${duration(Math.max(0, (Date.now() - start) / 1000))}` : "";
+}
+async function api(path, body) {
+  let response;
   try {
-    const response = await fetch("/api/presets");
-    presets = await response.json();
-    renderPresets();
-  } catch {
-    presetList.replaceChildren();
-    const message = document.createElement("p");
-    message.textContent = "프리셋을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.";
-    presetList.append(message);
+    response = await fetch(path, { method: body === undefined ? "GET" : "POST", credentials: "same-origin", headers: body === undefined ? {} : { "Content-Type": "application/json", "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
+  } catch { throw new Error("연결하지 못했습니다. 마지막으로 확인한 내용을 표시합니다."); }
+  let data;
+  try { data = await response.json(); } catch { throw new Error("응답을 확인하지 못했습니다. 상태를 다시 확인하세요."); }
+  if (!response.ok) {
+    const error = new Error(typeof data.error === "string" ? data.error : "요청을 처리하지 못했습니다.");
+    error.definitive = response.status >= 400 && response.status < 500;
+    error.data = data;
+    throw error;
   }
+  if (!data || typeof data !== "object") throw new Error("응답 형식을 확인할 수 없습니다.");
+  return data;
 }
-
-function renderPresets() {
-  presetList.replaceChildren();
-  presets.forEach((preset, index) => {
-    const label = document.createElement("label");
-    label.className = "preset-option";
-    const input = document.createElement("input");
-    input.type = "radio";
-    input.name = "preset";
-    input.value = preset.id;
-    input.checked = index === 0;
-    input.addEventListener("change", () => selectPreset(preset.id));
-    const text = document.createElement("span");
-    text.textContent = preset.name;
-    label.append(input, text);
-    presetList.append(label);
+function items(data) { if (!Array.isArray(data.items)) throw new Error("목록 응답을 확인할 수 없습니다."); return data.items; }
+function skipToContent(event) {
+  event.preventDefault();
+  $("content").focus();
+}
+function route() {
+  const ids = ["dashboard", "generate", "library", "scheduler"];
+  const name = ids.includes(location.hash.slice(1)) ? location.hash.slice(1) : "dashboard";
+  ids.forEach((id) => { $(id).hidden = id !== name; });
+  document.querySelectorAll(".navigation a").forEach((link) => {
+    if (link.hash === `#${name}`) link.setAttribute("aria-current", "page"); else link.removeAttribute("aria-current");
   });
-  if (presets.length) selectPreset(presets[0].id);
+  if (name === "library") loadLibrary();
 }
-
-function selectPreset(presetId) {
-  const preset = presets.find((item) => item.id === presetId);
-  if (!preset) return;
-  selectedPresetId = preset.id;
-  promptField.value = preset.default_prompt;
+function detailLabel(value) {
+  if (value == null) return "";
+  if (Array.isArray(value)) return value.map(detailLabel).filter(Boolean).join(", ");
+  if (typeof value === "object") return Object.entries(value).map(([key, item]) => `${key}: ${detailLabel(item)}`).join(" · ");
+  return String(value);
 }
-
+function controls() {
+  const locked = state.busy || Boolean(state.pending);
+  $("category").disabled = locked || !state.categories.length || state.previewBusy;
+  $("variant").disabled = locked || !$("category").value || state.previewBusy;
+  $("preview").disabled = locked || !$("category").value || state.previewBusy;
+  $("reload-categories").disabled = locked || state.previewBusy;
+  $("music-prompt").disabled = locked || !state.preview || state.previewBusy;
+  $("create-job").disabled = locked || !state.preview || state.previewBusy || !$("music-prompt").value.trim();
+  $("retry-submit").hidden = !state.pending || Boolean(state.pending.jobId);
+  $("retry-submit").disabled = state.busy;
+}
+function savePending() {
+  try { if (state.pending) sessionStorage.setItem("automusic.pending", JSON.stringify(state.pending)); else sessionStorage.removeItem("automusic.pending"); } catch { /* Same-page idempotency remains available when storage is blocked. */ }
+}
+function invalidatePreview() { state.preview = null; state.sequence += 1; $("music-prompt").value = ""; text("preview-details", "미리보기를 다시 확인하세요."); if (!state.pending) text("job-status", "미리보기를 먼저 확인하세요."); controls(); }
+function hasEdits() { return state.preview && $("music-prompt").value !== state.preview.prompt; }
+function confirmDiscard() { return !hasEdits() || window.confirm("수정한 프롬프트를 지우고 선택을 바꿀까요?"); }
+let selectedCategory = "";
+let selectedVariant = "random";
+function fillVariants() {
+  const category = state.categories.find((item) => item.id === $("category").value);
+  $("variant").replaceChildren(new Option("랜덤으로 선택", "random"));
+  (category?.variants || []).forEach((variant) => $("variant").add(new Option(variant.label || variant.id, variant.id)));
+  selectedVariant = "random";
+}
+async function loadCategories() {
+  if (state.pending || state.busy) return;
+  if (!confirmDiscard()) return;
+  invalidatePreview();
+  $("category").disabled = true; $("reload-categories").disabled = true;
+  text("selection-message", "선택지를 불러오는 중입니다.");
+  try {
+    const categories = items(await api("/api/categories"));
+    state.categories = categories.filter((item) => typeof item.id === "string" && Array.isArray(item.variants));
+    $("category").replaceChildren(new Option("직접 선택하세요", ""));
+    state.categories.forEach((category) => $("category").add(new Option(category.label || category.id, category.id)));
+    selectedCategory = ""; fillVariants();
+    text("selection-message", state.categories.length ? "카테고리는 직접, 변형은 직접 또는 랜덤으로 고르세요." : "사용할 수 있는 카테고리가 없습니다.");
+  } catch (error) { state.categories = []; text("selection-message", error.message); }
+  finally { controls(); }
+}
+async function preview() {
+  if (state.previewBusy || state.pending || !$("category").value || !confirmDiscard()) return;
+  const sequence = ++state.sequence;
+  state.previewBusy = true; controls(); text("selection-message", "선택한 변형과 프롬프트를 확인하는 중입니다.");
+  try {
+    const result = await api("/api/previews", { category_id: $("category").value, variant_id: $("variant").value });
+    if (sequence !== state.sequence) return;
+    if (!result.id || typeof result.prompt !== "string" || result.category_id !== $("category").value) throw new Error("미리보기 응답을 확인할 수 없습니다.");
+    state.preview = result; $("music-prompt").value = result.prompt;
+    const details = result.details || {};
+    const list = [result.category_id, result.variant_id || "기본형", result.model, details.genre, details.bpm != null ? `${details.bpm} BPM` : null, details.instruments, details.mood, details.arrangement, details.duration_seconds != null ? `설정 길이 ${duration(details.duration_seconds)}` : null];
+    text("preview-details", list.map(detailLabel).filter(Boolean).join(" · "));
+    text("selection-message", "이 변형으로 만듭니다. 음악을 만들 때 다시 뽑지 않습니다.");
+    if (!state.pending) text("job-status", "확인한 프롬프트로 음악을 만들 준비가 됐습니다.");
+    text("form-error", ""); $("new-draft").hidden = true;
+  } catch (error) { if (sequence === state.sequence) { state.preview = null; text("selection-message", error.message); } }
+  finally { state.previewBusy = false; controls(); }
+}
 async function createJob() {
-  formError.textContent = "";
-  assetLinks.replaceChildren();
-  if (!selectedPresetId) {
-    formError.textContent = "먼저 프리셋을 선택해 주세요.";
-    return;
-  }
-  const musicPrompt = promptField.value.trim();
-  if (!musicPrompt) {
-    formError.textContent = "프롬프트를 입력해 주세요.";
-    return;
-  }
-  createButton.disabled = true;
-  setPresetControlsDisabled(true);
-  jobStatus.textContent = "작업을 예약하고 있습니다.";
+  if (state.busy || state.pending || !state.preview) return;
+  const prompt = $("music-prompt").value.trim();
+  if (!prompt) { text("form-error", "프롬프트를 입력하세요."); $("music-prompt").focus(); return; }
+  state.pending = { body: { preview_id: state.preview.id, music_prompt: prompt, request_id: crypto.randomUUID() }, jobId: null };
+  savePending(); await submitPending();
+}
+async function submitPending() {
+  if (state.busy || !state.pending || state.pending.jobId) return;
+  state.busy = true; controls(); text("form-error", ""); text("job-status", "요청을 접수하고 있습니다.");
   try {
-    const response = await fetch("/api/jobs", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ preset_id: selectedPresetId, music_prompt: musicPrompt }),
-    });
-    const job = await response.json();
-    if (!response.ok) throw new Error(job.error || "작업을 시작하지 못했습니다.");
-    pollJob(job.id);
+    const job = await api("/api/jobs", state.pending.body);
+    if (!job.id || !job.status) throw new Error("접수 결과를 확인할 수 없습니다.");
+    state.pending.jobId = job.id; savePending();
+    text("job-status", labels[job.status] || "알 수 없는 작업 상태");
+    await loadJobs(); await loadDashboard();
   } catch (error) {
-    formError.textContent = error instanceof Error ? error.message : "작업을 시작하지 못했습니다.";
-    jobStatus.textContent = "다시 시도할 수 있습니다.";
-    createButton.disabled = false;
-    setPresetControlsDisabled(false);
-  }
+    text("form-error", error.message);
+    if (error.definitive) {
+      state.pending = null; savePending(); text("job-status", "요청이 거부되었습니다. 문구와 선택을 확인하세요.");
+      if (!state.categories.length) await loadCategories();
+    } else text("job-status", "요청이 접수됐는지 확인이 필요합니다. 같은 요청 다시 확인 버튼으로 앞서 보낸 요청을 확인하세요.");
+  } finally { state.busy = false; controls(); }
 }
-
-async function pollJob(jobId) {
+function media(record, parent) {
+  const audioURL = safeURL(record.audio_url), downloadURL = safeURL(record.download_url);
+  if (!audioURL && !downloadURL) return;
+  const row = element("div", null, "media");
+  if (audioURL) {
+    const audio = document.createElement("audio"); audio.controls = true; audio.preload = "metadata"; audio.src = audioURL;
+    audio.setAttribute("aria-label", `${record.title || "음악"} 재생`);
+    const message = element("span", "", "note"); message.setAttribute("role", "status");
+    audio.addEventListener("error", () => { message.textContent = "재생하지 못했습니다. 목록을 새로고침하거나 다운로드를 이용하세요."; });
+    row.append(audio, message);
+  }
+  if (downloadURL) { const link = element("a", "음원 다운로드"); link.href = downloadURL; link.download = ""; row.append(link); }
+  parent.append(row);
+}
+function renderRecords(target, records, jobs = false) {
+  const container = $(target);
+  // Keep existing audio elements alive across status polling and search refreshes.
+  const old = new Map(Array.from(container.children).map((node) => [node.dataset.id, node]));
+  const nodes = records.map((record) => {
+    const fingerprint = JSON.stringify(record);
+    const existing = old.get(String(record.id));
+    if (existing && existing.dataset.fingerprint === fingerprint) {
+      const timer = existing.querySelector("[data-elapsed]"); if (timer) timer.textContent = elapsed(record);
+      return existing;
+    }
+    const article = element("article", null, "record"); article.dataset.id = String(record.id); article.dataset.fingerprint = fingerprint;
+    const heading = element("div", null, "record-heading"); heading.append(element("h3", record.title || "제목 없는 음악"));
+    heading.append(element("span", jobs ? (labels[record.status] || "상태 확인 필요") : sourceLabel(record.source), "badge")); article.append(heading);
+    const meta = element("p", [record.category_id || "카테고리 정보 없음", record.variant_id || "변형 정보 없음", dateLabel(record.created_at), duration(record.duration_seconds), record.model].filter(Boolean).join(" · "), "note");
+    const timer = element("span", elapsed(record)); timer.dataset.elapsed = ""; meta.append(timer); article.append(meta);
+    if (jobs && ["failed", "interrupted"].includes(record.status)) article.append(element("p", record.error || "작업이 완료되지 않았습니다.", "note"));
+    if (!jobs || record.status === "completed") {
+      if (!safeURL(record.audio_url) && !safeURL(record.download_url)) article.append(element("p", "결과 파일을 확인해 주세요", "note"));
+      else media(record, article);
+    }
+    if (record.music_prompt) { const details = element("details"); details.append(element("summary", "실제 프롬프트 보기"), element("p", record.music_prompt, "prompt-copy")); article.append(details); }
+    return article;
+  });
+  // Reconcile without detaching unchanged players, so polling does not stop playback.
+  nodes.forEach((node, index) => { if (container.children[index] !== node) container.insertBefore(node, container.children[index] || null); });
+  const keep = new Set(nodes); Array.from(container.children).forEach((node) => { if (!keep.has(node)) node.remove(); });
+}
+async function loadJobs() {
+  if (state.jobsBusy) return;
+  state.jobsBusy = true; $("job-list").setAttribute("aria-busy", "true");
   try {
-    const response = await fetch(`/api/jobs/${encodeURIComponent(jobId)}`);
-    const job = await response.json();
-    if (!response.ok) throw new Error(job.error || "작업 상태를 확인하지 못했습니다.");
-    jobStatus.textContent = statusMessage(job.status);
-    if (job.status === "completed") {
-      renderAssetLinks(jobId, job.artifacts);
-      createButton.disabled = false;
-      setPresetControlsDisabled(false);
-      return;
+    const jobs = items(await api("/api/jobs")); renderRecords("job-list", jobs, true);
+    const newlyCompleted = jobs.some((job) => job.status === "completed" && ["queued", "generating_music"].includes(state.jobStatuses?.get(job.id)));
+    state.jobStatuses = new Map(jobs.map((job) => [job.id, job.status]));
+    if (newlyCompleted) loadLibrary();
+    text("jobs-message", jobs.length ? `작업 ${jobs.length}개 · 마지막 조회 ${new Date().toLocaleTimeString("ko-KR")}` : "아직 생성한 작업이 없습니다.");
+    if (state.pending?.jobId) {
+      const current = jobs.find((job) => job.id === state.pending.jobId);
+      if (current) {
+        text("job-status", labels[current.status] || "상태 확인 필요");
+        if (["completed", "failed", "interrupted"].includes(current.status)) {
+          state.pending = null; state.preview = null; savePending(); $("new-draft").hidden = false;
+          if (current.status === "completed" && !newlyCompleted) loadLibrary();
+          text("form-error", current.status === "completed" ? "" : current.error || "작업이 완료되지 않았습니다.");
+        }
+      } else text("job-status", "접수한 작업이 목록에 없습니다. 새로 만들지 말고 작업 새로고침을 눌러 다시 확인하세요.");
     }
-    if (job.status === "failed") {
-      renderAssetLinks(jobId, job.artifacts);
-      formError.textContent = job.error || "작업을 완료하지 못했습니다.";
-      createButton.disabled = false;
-      setPresetControlsDisabled(false);
-      return;
-    }
-    window.setTimeout(() => pollJob(jobId), 2000);
-  } catch (error) {
-    formError.textContent = error instanceof Error ? error.message : "작업 상태를 확인하지 못했습니다.";
-    createButton.disabled = false;
-    setPresetControlsDisabled(false);
+  } catch (error) { text("jobs-message", error.message); }
+  finally { state.jobsBusy = false; $("job-list").setAttribute("aria-busy", "false"); controls(); }
+}
+async function loadDashboard() {
+  $("dashboard").setAttribute("aria-busy", "true");
+  try {
+    const data = await api("/api/dashboard");
+    text("track-count", data.track_count ?? "확인 필요"); text("total-duration", duration(data.total_duration_seconds)); text("active-count", Array.isArray(data.active_jobs) ? data.active_jobs.length : "확인 필요");
+    const jobs = [...(data.active_jobs || []), ...(data.recent_errors || [])];
+    renderRecords("dashboard-jobs", [...new Map(jobs.map((job) => [job.id, job])).values()], true);
+    text("dashboard-message", `마지막 조회 ${new Date().toLocaleTimeString("ko-KR")} · ${jobs.length ? "진행 단계와 최근 오류를 확인하세요." : "진행 작업과 최근 오류가 없습니다."}`);
+  } catch (error) { text("dashboard-message", error.message); }
+  finally { $("dashboard").setAttribute("aria-busy", "false"); }
+}
+function sourceLabel(value) { return ({ web: "웹 생성", web_job: "웹 생성", "web-jobs": "웹 생성", automation: "기존 자동화", track: "기존 트랙", archived: "보관된 트랙" })[value] || value || "출처 정보 없음"; }
+function renderLibrary() {
+  const search = $("library-search").value.trim().toLocaleLowerCase(); const source = $("source-filter").value;
+  const filtered = state.library.filter((item) => (source === "all" || item.source === source) && [item.title, item.category_id, item.variant_id].filter(Boolean).join(" ").toLocaleLowerCase().includes(search));
+  renderRecords("library-list", filtered);
+  text("library-message", `${state.library.length}곡 중 ${filtered.length}곡 표시${state.libraryWarning || ""}${!state.library.length ? " · 재생 가능한 음악이 없습니다." : !filtered.length ? " · 조건에 맞는 음악이 없습니다." : ""}`);
+}
+async function loadLibrary() {
+  if (state.libraryBusy) return;
+  state.libraryBusy = true;
+  $("library-list").setAttribute("aria-busy", "true");
+  try {
+    const data = await api("/api/library"); state.library = items(data); state.libraryWarning = data.unreadable_count ? ` · ${data.unreadable_count}개 항목을 읽지 못했습니다` : "";
+    const selected = $("source-filter").value;
+    $("source-filter").replaceChildren(new Option("모든 출처", "all"));
+    [...new Set(state.library.map((item) => item.source).filter(Boolean))].forEach((source) => $("source-filter").add(new Option(sourceLabel(source), source)));
+    if (Array.from($("source-filter").options).some((option) => option.value === selected)) $("source-filter").value = selected;
+    renderLibrary();
+  } catch (error) { text("library-message", error.message); }
+  finally { state.libraryBusy = false; $("library-list").setAttribute("aria-busy", "false"); }
+}
+function schedulerControls() {
+  const value = state.scheduler;
+  const supported = value?.supported === true && value?.installed === true;
+  const recovery = supported && typeof value.registered === "boolean" && value.state === "partial_failure";
+  const persistDisable = supported && value.registered === false && value.state === "disabled" && value.enabled === false;
+  const ready = !state.schedulerBusy && supported && typeof value.enabled === "boolean" && ["enabled", "disabled"].includes(value.state);
+  $("scheduler-enable").disabled = state.schedulerBusy || (!recovery && (!ready || value.enabled));
+  $("scheduler-disable").disabled = state.schedulerBusy || (!recovery && !persistDisable && (!ready || !value.enabled));
+  text("scheduler-enable", recovery ? "켜기 재시도" : "자동화 켜기");
+  text("scheduler-disable", recovery ? "끄기 재시도" : "자동화 끄기");
+  $("refresh-scheduler").disabled = state.schedulerBusy;
+}
+function renderScheduler(data) {
+  state.scheduler = data;
+  const yesNo = (value) => value === true ? "예" : value === false ? "아니오" : "확인 불가";
+  const status = { enabled: "켜짐", disabled: "꺼짐", unknown: "확인 불가", not_installed: "미설치", unsupported: "미지원", partial_failure: "일부 실패 · 복구 확인 필요" };
+  const rows = [["예약 상태", status[data.state] || "확인 불가"], ["설치됨", yesNo(data.installed)], ["등록됨", yesNo(data.registered)], ["실행 중", yesNo(data.running)], ["일정", data.schedule ? `${String(data.schedule.hour).padStart(2, "0")}:${String(data.schedule.minute).padStart(2, "0")} · 운영체제 예약 시간` : "일정 정보 없음"], ["카테고리", data.category_id || "정보 없음"], ["확인 시각", dateLabel(data.observed_at)]];
+  $("scheduler-details").replaceChildren(...rows.flatMap(([label, value]) => [element("dt", label), element("dd", value)]));
+  text("scheduler-message", data.error || "방금 확인한 상태입니다. 상태를 바꾸기 전에는 한 번 더 묻습니다."); schedulerControls();
+}
+function schedulerFailure(error) {
+  const data = error.data;
+  if (data && ["unknown", "partial_failure", "unsupported", "not_installed"].includes(data.state)) {
+    renderScheduler(data);
+    const recovery = data.state === "partial_failure" && data.supported === true && data.installed === true && typeof data.registered === "boolean";
+    text("scheduler-message", `${error.message} 지금 예약 상태를 확인할 수 없습니다.${recovery ? " 켜기 또는 끄기 버튼을 눌러 원하는 상태로 다시 시도하세요." : ""}`);
+  } else {
+    renderScheduler({ state: "unknown", supported: null, installed: null, registered: null, running: null, enabled: null, schedule: null, category_id: null, observed_at: null });
+    text("scheduler-message", `${error.message} 지금 상태를 확인할 수 없어 이전 상태도 표시하지 않습니다.`);
   }
 }
-
-function statusMessage(status) {
-  const messages = {
-    queued: "작업을 기다리고 있습니다.",
-    generating_music: "음악을 만들고 있습니다.",
-    completed: "작업이 완성되었습니다.",
-    failed: "작업을 완료하지 못했습니다.",
-  };
-  return messages[status] || "작업 상태를 확인하고 있습니다.";
+async function loadScheduler() {
+  if (state.schedulerBusy) return;
+  state.schedulerBusy = true; schedulerControls();
+  try { renderScheduler(await api("/api/scheduler")); }
+  catch (error) { schedulerFailure(error); }
+  finally { state.schedulerBusy = false; schedulerControls(); }
 }
-
-function renderAssetLinks(jobId, artifacts) {
-  assetLinks.replaceChildren();
-  ["audio"].forEach((asset) => {
-    if (!artifacts || !artifacts[asset]) return;
-    const link = document.createElement("a");
-    link.href = `/api/jobs/${encodeURIComponent(jobId)}/downloads/${asset}`;
-    link.textContent = `${asset.toUpperCase()} 다운로드`;
-    assetLinks.append(link);
-  });
+async function setScheduler(enabled) {
+  if (state.schedulerBusy || (enabled ? $("scheduler-enable") : $("scheduler-disable")).disabled) return;
+  if (!window.confirm(enabled ? "자동화를 켤까요? 현재 기본 설정은 음악만 쌓고 배치 업로드는 꺼져 있습니다. 설정에서 배치 업로드를 허용한 경우에만 이미지 생성·MP4 취합·YouTube 업로드·success 자동 이동을 실행합니다." : "다음 예약 실행부터 끌까요? 이미 실행 중인 작업은 강제로 멈추지 않습니다.")) return;
+  state.schedulerBusy = true; schedulerControls(); text("scheduler-message", "변경 후 실제 상태를 확인하고 있습니다.");
+  try {
+    await api("/api/scheduler", { enabled });
+    const observed = await api("/api/scheduler"); renderScheduler(observed);
+    text("scheduler-message", observed.enabled === enabled && observed.state === (enabled ? "enabled" : "disabled") ? "원하는 상태로 바뀐 것을 확인했습니다." : "요청한 상태와 실제 상태가 다릅니다. 다시 확인하세요.");
+  } catch (error) { schedulerFailure(error); text("scheduler-message", `${$("scheduler-message").textContent} 상태가 바뀌었는지 확인하지 못했습니다. 다시 확인하세요.`); }
+  finally { state.schedulerBusy = false; schedulerControls(); }
 }
-
-function setPresetControlsDisabled(disabled) {
-  document.querySelectorAll('input[name="preset"]').forEach((input) => {
-    input.disabled = disabled;
-  });
-}
-
-createButton.addEventListener("click", createJob);
-loadPresets();
+document.querySelector(".skip-link").addEventListener("click", skipToContent);
+$("category").addEventListener("change", () => {
+  if (!confirmDiscard()) { $("category").value = selectedCategory; return; }
+  selectedCategory = $("category").value; fillVariants(); invalidatePreview();
+});
+$("variant").addEventListener("change", () => {
+  if (!confirmDiscard()) { $("variant").value = selectedVariant; return; }
+  selectedVariant = $("variant").value; invalidatePreview();
+});
+$("music-prompt").addEventListener("input", controls);
+$("preview").addEventListener("click", preview);
+$("create-job").addEventListener("click", createJob);
+$("retry-submit").addEventListener("click", submitPending);
+$("new-draft").addEventListener("click", async () => { invalidatePreview(); $("new-draft").hidden = true; text("job-status", "새 미리보기를 확인하세요. 이전에 수정한 문구는 이어 쓰지 않습니다."); if (!state.categories.length) await loadCategories(); $("category").focus(); });
+$("reload-categories").addEventListener("click", loadCategories);
+$("refresh-jobs").addEventListener("click", loadJobs);
+$("refresh-dashboard").addEventListener("click", loadDashboard);
+$("refresh-library").addEventListener("click", loadLibrary);
+$("refresh-scheduler").addEventListener("click", loadScheduler);
+$("scheduler-enable").addEventListener("click", () => setScheduler(true));
+$("scheduler-disable").addEventListener("click", () => setScheduler(false));
+$("library-search").addEventListener("input", renderLibrary);
+$("source-filter").addEventListener("change", renderLibrary);
+window.addEventListener("hashchange", () => { route(); $("content").focus(); });
+try {
+  const pending = JSON.parse(sessionStorage.getItem("automusic.pending"));
+  if (pending?.body?.request_id && pending.body.preview_id && typeof pending.body.music_prompt === "string") {
+    state.pending = pending; $("music-prompt").value = pending.body.music_prompt;
+    text("job-status", pending.jobId ? "접수한 작업이 어디까지 진행됐는지 확인하고 있습니다." : "요청이 접수됐는지 확인이 필요합니다. 같은 요청 다시 확인을 눌러주세요.");
+  }
+} catch { /* A malformed saved request is ignored; no request is replayed automatically. */ }
+route(); controls();
+if (!state.pending) loadCategories();
+loadJobs(); loadDashboard(); loadLibrary(); loadScheduler();
+window.setInterval(() => { if (!document.hidden) loadJobs(); }, 4000);
+window.setInterval(() => { if (!document.hidden && !$("dashboard").hidden) loadDashboard(); }, 15000);

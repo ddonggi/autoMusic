@@ -1,28 +1,23 @@
 # AutoMusic 운영 가이드
 
-AutoMusic은 두 가지 실행 방식을 제공합니다.
+**현재 배치 업로드는 비활성입니다.** `configs/upload.yaml`의 `batch_upload_enabled: false`를 사용하며 해당 설정이 누락되어도 비활성으로 처리합니다. 음악 생성·웹 재생·WAV 다운로드는 계속 사용하고 YouTube에는 사용자가 직접 업로드합니다. 이미지 생성·MP4 취합·자동 업로드·`success/` 자동 이동은 수행하지 않습니다. 기존 트랙·미완료 배치·보관 결과는 그대로 보존합니다.
 
-1. 로컬 웹 UI에서 음악 한 곡을 수동 생성하고 WAV를 다운로드합니다.
-2. macOS `launchd`가 매일 음악을 하나씩 만들고, 설정된 개수가 모이면 공통 이미지 1장으로 긴 MP4를 만든 뒤 YouTube에 업로드합니다.
+음악 기본 모델은 `lyria-3.5`입니다. YAML 프롬프트와 arrangement를 Interactions API로 전달하고, 완성곡을 FFmpeg로 48kHz 스테레오 WAV로 변환합니다. `duration_seconds`는 목표 길이이며 실제 길이를 보장하지 않습니다. 곡을 자르지 않고 실제 길이를 `track.json`에 기록합니다. `google-genai>=2.31.0`이 필요합니다. 정책 차단 시 프롬프트를 자동 변경하지 않습니다.
 
-```mermaid
-flowchart TD
-    A[웹 UI] --> B[프리셋/음악 프롬프트 입력]
-    B --> C[Lyria 음악 생성]
-    C --> D[WAV 다운로드]
-    E[launchd 지정 시각] --> F[run_automation.py]
-    F --> G[음악 1개 생성]
-    G --> H[workspace/tracks에 generated 저장]
-    H --> I{generated 트랙이 batch_count개인가?}
-    I -- 아니오 --> J[다음 실행 대기]
-    I -- 예 --> K[배치 생성]
-    K --> L[주제 기반 16:9 이미지 1장 생성]
-    L --> M[모든 트랙을 MP4로 취합]
-    M --> N[YouTube 업로드]
-    N --> O[success로 이동하고 누적 초기화]
+AutoMusic은 로컬 웹 대시보드와 기존 배치 자동화를 제공합니다. 웹 생성은 음악 WAV만 만들며 이미지·MP4·YouTube 업로드·SMTP 알림을 호출하지 않습니다. 예약 자동화도 현재는 음악 누적까지만 수행합니다. 아래 배치 이미지·영상·업로드 설명은 향후 배치 설정을 명시적으로 활성화한 경우의 기존 흐름입니다.
+
+## 실행 환경
+
+이 저장소의 기존 검증용 Python은 `.worktrees/automusic-pipeline/.venv/bin/python`입니다. 프로젝트 루트 `.venv`와는 별개입니다. 해당 실행 파일이 있는 환경에서 로컬 웹을 여는 명령은 다음과 같습니다.
+
+```bash
+cd /Users/dglee/workspace/autoMusic
+.worktrees/automusic-pipeline/.venv/bin/python scripts/run_web.py
 ```
 
-## 설치
+[로컬 대시보드](http://127.0.0.1:8765)를 엽니다. 기본 포트는 8765이고 `--port`로 바꿀 수 있습니다. `--host`는 `127.0.0.1` 또는 `localhost`만 허용하며 외부 공개는 지원하지 않습니다. 웹 서버는 같은 저장소당 한 인스턴스만 실행합니다. 다른 웹 서버가 이미 저장소 잠금을 보유하면 두 번째 실행은 거절됩니다.
+
+새 환경에서의 설치 예시는 아래와 같습니다. 기존 가상환경을 다시 만드는 절차가 아닙니다.
 
 ```bash
 cd /Users/dglee/workspace/autoMusic
@@ -31,163 +26,163 @@ python3 -m venv .venv
 cp .env.example .env
 ```
 
-`.env`에는 실제 키를 입력하되 커밋하지 않습니다. `GEMINI_API_KEY`, `OPENAI_API_KEY`, YouTube OAuth 값이 필요하며 Gmail 알림은 선택입니다.
+`.env`가 이미 있으면 복사로 덮어쓰지 않습니다. 신규 `.venv` 설치를 선택했다면 이후 예시의 기존 검증용 Python 경로를 `.venv/bin/python`으로 바꿉니다. 음악 변환과 영상 렌더링에는 별도로 FFmpeg가 필요합니다. 패키지 선언은 설치 성공이나 API 이용 권한을 의미하지 않습니다.
 
-## 수동 웹 생성
+키는 로컬 `.env`에서 관리하며 값은 화면·보고서에 붙이지 않습니다. 웹 음악 생성은 Google 생성 API 설정이 필요합니다. 이미지 생성의 `OPENAI_API_KEY`와 YouTube OAuth 값은 현재 비활성인 배치 자동화를 명시적으로 활성화해 사용할 때만 필요하고 일일 음악 생성의 SMTP 알림은 선택입니다. 서버 시작은 `.env`를 읽지만 음악은 생성 버튼을 눌렀을 때 요청합니다.
 
-웹 생성은 이미지와 영상을 만들지 않고 음악 WAV만 생성합니다. YouTube 업로드도 수행하지 않습니다.
+## 웹 대시보드
 
-```bash
-.venv/bin/python scripts/run_web.py
-```
-
-브라우저에서 [http://127.0.0.1:8765](http://127.0.0.1:8765)를 엽니다.
-
-| 요청 | 기능 |
+| 화면 | 사용법과 의미 |
 | --- | --- |
-| `GET /api/presets` | 프리셋과 기본 음악 프롬프트 조회 |
-| `POST /api/jobs` | 프리셋과 사용자 프롬프트로 음악 생성 시작 |
-| `GET /api/jobs/<id>` | 작업 상태와 메타데이터 조회 |
-| `GET /api/jobs/<id>/downloads/audio` | 생성된 WAV 다운로드 |
+| 대시보드 | 재생 가능한 완료 곡 수·실제 총 길이, 진행 작업과 최근 실패/중단을 확인합니다. |
+| 음악 생성 | 카테고리를 직접 선택하고 세부 변형을 선택하거나 랜덤으로 미리보기를 만듭니다. 최종 프롬프트를 수정한 뒤 생성합니다. |
+| 라이브러리 | 기존 자동화 트랙·아카이브·웹 완료 결과를 조회하고 WAV를 재생·탐색·다운로드합니다. |
+| 스케줄러 | 설치·등록·활성·실행 중 여부를 구분해 확인하고 기존 자동화의 다음 실행을 켜거나 끕니다. |
 
-작업 상태는 `queued`, `generating_music`, `completed`, `failed`입니다. 작업 파일은 `workspace/web-jobs/<job-id>/`에 저장됩니다.
+랜덤은 선택한 카테고리 안의 변형에만 적용됩니다. 미리보기에서 변형·BPM·악기·곡 구조 등을 확정하고 생성 시 재추첨하지 않습니다. 프롬프트는 생성 전 횟수 제한 없이 편집할 수 있으며 이번 생성에만 적용합니다. 원본 YAML과 다음 작업의 기본값을 바꾸지 않습니다. 제출문은 앞뒤 공백을 제거하며 1~20,000자여야 합니다.
 
-## 자동 배치 실행
+카테고리·변형 변경이나 다시 추첨은 새 미리보기를 만드는 동작입니다. 편집한 내용을 확인하고 생성합니다. 동일 요청의 재전송과 이미 사용한 미리보기의 같은 프롬프트는 같은 작업을 반환합니다. 실패한 작업을 새로 생성하려면 새 미리보기를 만들고 명시적으로 다시 요청해야 합니다. 새 요청은 비용이 다시 발생할 수 있습니다.
 
-`configs/category.conf`에서 카테고리를 선택하고, `configs/categories/<category>.yaml`에서 해당 카테고리의 음악 설정을 읽습니다.
+작업 상태는 다음과 같습니다.
+
+| 상태 | 의미와 대응 |
+| --- | --- |
+| `queued` | 웹 작업 대기열에 저장됨. 즉시 다시 제출하지 않습니다. |
+| `generating_music` | 음악 생성 중. 표시된 경과 시간은 완료 예상 시간이 아닙니다. |
+| `completed` | 저장된 결과를 재생·다운로드할 수 있습니다. |
+| `failed` | 작업 실패. 내용과 상태를 확인한 뒤 새 미리보기로 다시 시도합니다. |
+| `interrupted` | 재시작 시 남아 있던 대기/진행 작업. 자동으로 유료 요청을 재개하지 않습니다. |
+
+웹 작업자는 한 번에 하나씩 실행하며 대기/진행 작업은 최대 10개입니다. 재시작은 진행 작업을 복구·재생성하는 기능이 아닙니다. 웹 저장소가 손상되어 시작이 거절되면 파일을 삭제해 초기화하지 말고 먼저 보존해 원인을 확인합니다. 중복 방지 기록을 지우면 중복 유료 요청을 막던 근거도 사라집니다.
+
+라이브러리는 유효한 WAV와 메타데이터를 확인한 결과만 보여 줍니다. 손상되거나 경계를 벗어난 결과는 제외하며 `unreadable_count`에 반영됩니다. 이전 트랙의 카테고리·모델 등 정보가 없거나 장르가 여러 카테고리와 일치하면 값이 비어 있을 수 있습니다. 목록에서 빠진 파일을 임의 경로 URL로 여는 방식은 지원하지 않습니다.
+
+## 카테고리와 모델
+
+웹은 `configs/categories/*.yaml`을 읽습니다. 기존 자동화는 `configs/category.conf`의 `music_category`로 YAML을 선택합니다. 현재 파일 값은 `study`이지만 실행 시점의 설정을 확인해야 하며 웹에서 카테고리를 선택해도 이 파일은 바뀌지 않습니다.
 
 ```text
-configs/category.conf       music_category phonk
-configs/categories/phonk.yaml
-configs/categories/study.yaml
-configs/categories/fitness.yaml
-configs/categories/cafe.yaml
-configs/categories/lofi.yaml
+configs/category.conf                 music_category study
+configs/categories/<category>.yaml    음악 설정과 prompt_variants
+configs/upload.yaml                   배치 업로드 설정
 ```
 
-카테고리 파일은 기존 설정을 재사용하는 `source`를 사용할 수 있습니다. 새로운 카테고리는 `configs/categories/fitness.yaml`처럼 독립 YAML 파일로 추가하면 됩니다.
+카테고리 YAML은 `source`로 같은 카테고리 디렉터리의 설정을 상속할 수 있습니다. 웹의 상속 경로는 해당 경계 안으로 제한됩니다. `prompt_variants`의 이름은 중복되거나 `random`일 수 없습니다. `title_options`가 있으면 제목 후보를 사용하며 변형의 후보가 카테고리 전체 후보보다 우선합니다.
 
-각 카테고리 YAML의 `title_options`를 설정하면 해당 음악 분위기에 맞는 음원 제목을 사용합니다. `prompt_variants` 안에 `title_options`를 넣으면 전체 카테고리 제목보다 해당 variant의 제목이 우선됩니다.
+현재 기본 음악 경로는 `lyria-3.5` full-song Interactions 호출입니다. 목표 길이를 기준으로 실시간 스트림을 자르는 방식은 기본 경로가 아닙니다. 완성 음원을 FFmpeg로 변환하고 저장된 WAV의 실제 길이를 기록합니다. YAML의 `duration_seconds`는 목표이며 실제 길이를 보장하지 않습니다. 미리보기의 목표 길이와 완료 결과의 실제 길이를 구분합니다. 이 설명은 저장소 코드 기준이며 제공자의 이용 가능 여부를 검증한 결과는 아닙니다.
+
+## 기존 자동화와 수동 실행
+
+`run_automation.py`는 일일 음악 생성을 수행합니다. 현재 `configs/upload.yaml`은 다음 정책을 사용합니다.
 
 ```yaml
-duration_seconds: 180
-batch_count: 10
-genre: Brazilian phonk
-image_context: workout music video
+batch_upload_enabled: false
 ```
 
-현재 기본 카테고리는 `phonk`입니다. `study`로 바꾸려면 `configs/category.conf`를 다음처럼 수정합니다.
+설정이 없을 때도 배치를 비활성으로 처리합니다. 곡 수가 기준에 도달하거나 미완료 배치가 남아 있어도 이미지 생성·MP4 취합·YouTube 업로드·아카이브 이동으로 진행하지 않습니다. `--manual`은 예약 gate만 우회하며 배치 비활성 설정을 우회하지 않습니다. 웹 생성 결과도 별도 저장소에 보존됩니다. 사용자가 YouTube에 직접 업로드해도 로컬 상태나 파일 위치가 자동으로 바뀌지 않습니다.
 
-```text
-music_category study
-```
+배치 설정을 명시적으로 활성화한 경우에만 기존 분기가 적용됩니다. 일일 생성 뒤 미완료 배치가 있거나 `generated`이면서 배치에 포함되지 않은 트랙이 `batch_count` 이상이면 배치를 수행합니다. 기본 개수는 10이며 음악 설정의 값 또는 `--batch-count`로 바뀝니다. 현재 요청에는 배치 재활성화가 포함되지 않습니다.
 
-매일 음악 하나만 생성합니다.
+아래 명령은 실제 음악 생성 비용이 발생할 수 있는 운영 명령입니다. 프로젝트 루트에서 실행합니다. 현재 비활성 설정에서는 곡 생성 뒤 배치를 건너뛰며, 무과금 검증용 명령은 아닙니다.
 
 ```bash
-.venv/bin/python scripts/run_daily.py \
-  --config configs/categories/phonk.yaml
-```
-
-배치 개수에 도달하면 공통 이미지 생성, MP4 취합, YouTube 업로드, 아카이브를 수행합니다.
-
-```bash
-.venv/bin/python scripts/run_batch_upload.py \
-  --config configs/upload.yaml \
-  --music-config configs/categories/phonk.yaml \
-  --batch-count 10
-```
-
-통합 실행:
-
-```bash
-.venv/bin/python scripts/run_automation.py \
+.worktrees/automusic-pipeline/.venv/bin/python scripts/run_automation.py \
   --project-root /Users/dglee/workspace/autoMusic
 ```
 
-카테고리 파일을 임시로 지정할 때는 `--category-config`를 사용합니다. `--music-config`를 직접 지정하면 category 파일보다 우선합니다.
+기본 실행은 예약 차단 gate를 따릅니다. 명시적인 수동 실행으로 gate를 우회하려면 `--manual`을 추가합니다. 이 옵션은 음악 생성을 dry-run으로 바꾸지 않으며 배치 비활성 설정도 그대로 적용됩니다.
 
 ```bash
-.venv/bin/python scripts/run_automation.py \
-  --project-root /Users/dglee/workspace/autoMusic \
-  --category-config configs/category.conf
+.worktrees/automusic-pipeline/.venv/bin/python scripts/run_automation.py \
+  --project-root /Users/dglee/workspace/autoMusic --manual
 ```
+
+`--category-config`로 다른 카테고리 선택 파일을 지정할 수 있고 `--music-config`를 직접 지정하면 그 파일이 우선합니다. `--root`는 생성물 저장 루트를 변경합니다. 예약 gate 기준은 계속 `--project-root`입니다.
+
+일일 생성만 수행하는 직접 진입점도 있습니다. 예약 gate를 사용하지 않으며 실제 음악 생성을 요청합니다.
+
+```bash
+.worktrees/automusic-pipeline/.venv/bin/python scripts/run_daily.py \
+  --config configs/categories/study.yaml
+```
+
+직접 `scripts/run_batch_upload.py`를 실행해도 배치 설정이 비활성이거나 누락되면 차단됩니다. `--dry-run`도 동일하게 차단하며 더미 배치나 보관 결과를 만들지 않습니다. 미완료 배치를 재시도하려고 이 명령을 실행할 필요가 없습니다. 별도의 수동 API 업로드 도구는 이번 배치 호출 경로와 별개로 유지됩니다. 이번 변경은 모든 YouTube API 도구의 제거를 의미하지 않으며, 현재 운영 방식은 사용자가 YouTube에서 직접 업로드하는 것입니다.
 
 ## macOS 스케줄러
 
-현재 `com.automusic.daily` LaunchAgent가 등록되어 있으며 매일 오후 `12:00`에 실행됩니다. 프로젝트 루트는 `/Users/dglee/workspace/autoMusic`이고, 실행 시 `configs/category.conf`에서 카테고리를 읽습니다.
+제어 대상은 현재 사용자 GUI 도메인의 `com.automusic.daily`입니다. 설치 스크립트의 기본 예약은 로컬 시각 12:00이지만 실제 등록·활성·예약 시각은 조회 결과를 기준으로 합니다. plist 존재만으로 실행 가능하다고 판단하지 않습니다. 웹에서 임의 label·경로를 지정하거나 새 예약을 자동 설치하지 않습니다.
 
-`launchctl print` 결과의 `state = not running`은 오류가 아닙니다. 예약 시각까지 대기 중이면 정상적으로 표시됩니다.
+| 상태/관측 | 의미와 대응 |
+| --- | --- |
+| `enabled` | OS와 프로젝트 gate가 허용함. 등록된 idle도 활성 상태입니다. |
+| `disabled` | 다음 예약 실행이 비활성 상태입니다. `running=true`면 현재 작업은 계속 진행 중입니다. |
+| `registered=false` | 유효한 기존 plist와 GUI 도메인 조회 성공, service 코드 113으로 등록 해제를 확인한 상태입니다. 기존 설정을 켜면 enable 후 bootstrap으로 등록합니다. |
+| `unknown` | 조회·파싱·권한·설정 검증 실패. null을 꺼짐으로 해석하지 않습니다. 상태 새로고침 후 원인을 확인합니다. |
+| `partial_failure` | 변경 확인 실패 또는 OS와 gate 불일치. 성공으로 간주하지 않으며 상태를 다시 확인합니다. |
+| `not_installed` / `unsupported` | 기본 plist가 없거나 macOS가 아닙니다. 웹에서 임의 설치·권한 상승을 시도하지 않습니다. |
 
-최초 등록 또는 재등록:
+끄기는 `workspace/scheduler/gate.json`에 차단을 영속 저장하고 OS disable을 적용한 뒤 확인합니다. 실행 중 프로세스를 bootout·kill하지 않습니다. 끄기 전에 진입 승인된 작업은 계속 진행될 수 있습니다. 현재 배치 비활성 설정에서는 음악 생성만 허용되며, 이 설정 변경은 이미 실행 중인 외부 작업을 강제로 종료하는 기능은 아닙니다. 이후 기본 자동화 진입은 공통 잠금 아래 차단됩니다. gate가 손상되면 기본 실행을 차단합니다.
+
+켜기는 기존 plist의 프로젝트·스크립트·실행기·예약을 검증한 후 enable을 적용하고 필요한 경우 기존 서비스만 bootstrap합니다. 실행을 즉시 시작하는 명령은 사용하지 않습니다. 변경 실패 시 gate를 닫은 채 유지하며 자동으로 다시 활성화하지 않습니다. 재로그인·재부팅 후 유지 여부의 실제 OS 검증과 모의 테스트 결과는 구분해야 합니다.
+
+기본 실행은 disabled/unknown이면 `automation=skipped_scheduler_disabled_or_unknown`을 출력하고 음악·업로드를 호출하지 않습니다. 설치되지 않았거나 미지원 환경이고 별도 차단 gate가 없으면 기존 직접 실행 호환을 위해 허용합니다. 명시적 `--manual`은 gate를 우회합니다.
+
+최초 설치 또는 예약 시각 변경은 별도 운영 작업입니다. 아래 명령은 실제 예약을 등록하므로 실행 승인을 받은 뒤 사용합니다. 현재 변경 중인 커밋·정확한 명령·DB 변경 여부·복구 방법을 먼저 확인합니다. `--python-path`를 명시하여 루트 `.venv`가 없는 환경에서 실행기를 잘못 선택하지 않도록 합니다.
 
 ```bash
-cd /Users/dglee/workspace/autoMusic
-.venv/bin/python scripts/install_launchd.py \
+.worktrees/automusic-pipeline/.venv/bin/python scripts/install_launchd.py \
   --project-root /Users/dglee/workspace/autoMusic \
-  --hour 12 \
-  --minute 0
+  --python-path /Users/dglee/workspace/autoMusic/.worktrees/automusic-pipeline/.venv/bin/python \
+  --hour 12 --minute 0
 ```
 
-등록 확인:
+설치 스크립트는 기존 unload/load 방식이며 웹의 gate 상태를 초기화하지 않습니다. 예약 끄기를 위해 unload만 쓰거나 꺼진 gate를 수동 삭제하는 방식은 사용하지 않습니다. 중단·복구는 웹 제어로 OS와 gate를 함께 확인합니다.
 
-```bash
-launchctl print gui/$(id -u)/com.automusic.daily
-plutil -p ~/Library/LaunchAgents/com.automusic.daily.plist
-```
+## 저장 경로
 
-즉시 실행과 로그 확인:
-
-```bash
-launchctl start com.automusic.daily
-tail -f logs/launchd.out.log logs/launchd.err.log
-```
-
-스케줄러 중지와 재활성화:
-
-```bash
-launchctl unload ~/Library/LaunchAgents/com.automusic.daily.plist
-launchctl load ~/Library/LaunchAgents/com.automusic.daily.plist
-```
-
-예약 시간을 바꾸려면 `install_launchd.py`의 `--hour`, `--minute` 값을 변경해 재등록합니다.
-```
-
-## 폴더와 상태
+다음은 프로젝트 기본 저장 구조입니다. 새 DB는 사용하지 않습니다. `workspace/batches`와 `success`는 기존 결과를 보존하는 경로이며 현재 비활성 설정에서 새 배치 생성이나 자동 이동을 하지 않습니다.
 
 ```text
 workspace/
-├── tracks/<track-id>/
-│   ├── <genre>-<variant>-<timestamp>.wav
-│   └── track.json              generated 또는 batched
-├── batches/<batch-id>/
-│   ├── image.png                공통 16:9 이미지
-│   ├── segment_*.mp4
-│   ├── video.mp4
-│   └── batch.json
-└── web-jobs/<job-id>/           웹 수동 생성 결과
-
+├── tracks/<track-id>/           자동화 WAV와 track.json
+├── batches/<batch-id>/          image.png, video.mp4, batch.json 등
+├── web-jobs/
+│   ├── .dashboard-state.json    미리보기·요청·작업의 중복 방지 기록
+│   ├── .dashboard.lock          단일 웹 서버 잠금
+│   └── <job-id>/                job.json과 하위 트랙 WAV/track.json
+└── scheduler/
+    ├── gate.json                다음 기본 실행 허용/변경 실패 상태
+    └── control.lock             상태 변경·실행 진입 공통 잠금
 success/
-├── tracks/<track-id>/
-└── batches/<batch-id>/
+├── tracks/<track-id>/           업로드 후 보관한 음원
+└── batches/<batch-id>/          업로드 후 보관한 배치
 ```
 
-배치 이미지 생성이 성공하면 `batch.json`에 `image_path`, `image_prompt`, `image_variant`가 기록됩니다. 이미지나 렌더링에서 실패하면 배치는 삭제되지 않고 다음 실행에서 재개됩니다. YouTube ID가 기록된 배치는 중복 업로드하지 않고 아카이브부터 재시도합니다.
+라이브러리는 `workspace/tracks/*`, `success/tracks/*`, 완료된 `workspace/web-jobs/*/*`의 `track.json`과 WAV를 조회합니다. 파일 이름은 제목을 정리한 `<title>-<timestamp>.wav`이고 `track.json`에 실제 프롬프트·변형·모델·길이가 남습니다. job 저장소에는 이번 요청의 선택 결과도 보존됩니다. 실행 중인 서버의 상태 파일을 직접 편집하지 않습니다.
 
-각 트랙에는 prompt variant에 맞춘 `title`이 저장됩니다. 예를 들어 `Quiet Pages`, `Rain Between Chapters`, `One Step at a Time`처럼 생성됩니다. 음원 파일명은 이 제목을 안전하게 변환한 `<title>-<timestamp>.wav` 형식이며, 전체 음악 prompt는 같은 폴더의 `track.json`에서 확인할 수 있습니다.
+## 실패와 재시도
 
-## 드라이런과 검증
+웹 생성은 외부 응답이 끊긴 요청을 자동 재전송하지 않도록 음악 호출 시도를 1회로 제한합니다. 실패·중단 뒤 기존 요청 재전송은 같은 작업을 반환합니다. 새 미리보기로 다시 생성하기 전 기존 결과와 실패 상태를 확인합니다. 서버를 재시작해도 남은 유료 작업은 자동 재개하지 않습니다.
+
+기존 일일 생성은 `lyria_retries` 기본 3회, 재시도 간격 기본 30초이며 timeout·일시 불가 등 지정된 오류에서만 재시도합니다. 정책 차단을 피하려고 프롬프트를 자동 수정하지 않습니다. 이 자동 재시도와 웹의 수동 재생성 정책을 혼동하지 않습니다.
+
+현재는 배치 비활성 상태이므로 미완료 배치를 자동 재시도하지 않습니다. 기존 파일은 보존합니다. 이후 배치를 명시적으로 활성화한 경우에만 다음 기존 복구 흐름이 적용됩니다. 배치 이미지·렌더링 실패 시 기존 배치를 남기고 다음 배치 실행에서 이어서 시도합니다. `youtube_video_id`가 저장된 배치는 다시 업로드하지 않고 보관 단계로 갑니다. 외부 업로드는 완료됐지만 ID 저장 전에 연결이 끊긴 상황까지 중복 방지를 보장하지는 않으므로 재시도 전에 실제 업로드 결과를 확인합니다. 아카이브 이동이 일부만 완료된 경우에도 파일 상태를 먼저 확인하고 맹목적으로 재실행하지 않습니다.
+
+## 검증
+
+외부 생성·업로드·OS 변경을 대체한 자동 테스트는 다음과 같이 실행합니다. 전체 검증 결과와 실제 브라우저 확인은 해당 Phase 보고서의 근거를 봅니다.
 
 ```bash
-.venv/bin/python scripts/run_daily.py --config configs/categories/phonk.yaml --dry-run
-.venv/bin/python scripts/run_batch_upload.py --config configs/upload.yaml --music-config configs/categories/phonk.yaml --batch-count 10 --dry-run
-.venv/bin/python -m unittest discover -s tests -v
-.venv/bin/python -m compileall -q src scripts tests
+.worktrees/automusic-pipeline/.venv/bin/python -B -m unittest discover -s tests -v
 git diff --check
 ```
 
+`--dry-run`은 일반적으로 무변경 조회를 뜻하지 않습니다. daily dry-run은 더미 음원을 만들 수 있습니다. 직접 batch dry-run은 현재 비활성 설정에서 차단되며, 배치가 명시적으로 활성화된 환경에서는 더미 산출물과 보관 경로를 변경할 수 있으므로 실운영 저장소 검증에 사용하지 않습니다. 자동화의 dry-run도 하위 스크립트를 실행합니다. 이번 통합 검증에서는 총괄만 격리 fixture 서버를 실행하여 가짜 생성기·가짜 스케줄러로 화면을 확인하며 실제 서버의 생성·예약 토글은 실행하지 않습니다.
+
 ## 알림과 보안
 
-SMTP 환경변수를 설정하면 음악 생성 성공·실패, 배치 이미지·렌더링·업로드·아카이브 실패, 최종 업로드 성공 시 Gmail 알림을 보냅니다.
+일일 음악 생성에는 선택적 SMTP 성공·실패 알림이 있습니다. 현재 배치 비활성 상태에서는 배치 이미지/렌더링/업로드/보관 단계와 그 알림을 실행하지 않습니다. 배치를 명시적으로 활성화한 경우에만 선택된 배치의 이미지/렌더링/인증/업로드/보관 실패와 최종 성공 알림이 적용됩니다. 배치를 선택하기도 전에 실패하면 배치 ID 기반 알림이 없을 수 있습니다. SMTP 설정이 부족하거나 발송에 실패하면 알림을 건너뛰며 음악·배치 처리 결과와 알림 발송 성공은 별개입니다. 웹 생성에는 이 SMTP 경로가 연결되어 있지 않습니다.
 
-`.env`, OAuth 토큰, `workspace/`, `success/`, 로그는 커밋하지 않습니다. 상세 점검은 [보안 가이드](security.md)를 따릅니다.
+웹은 Host allowlist, 요청 출처 검사, 변경 요청 CSRF 헤더, 본문 크기 제한과 보안 헤더를 사용합니다. 서버 재시작 후 CSRF가 달라져 요청이 거절되면 페이지를 새로고침합니다. 결과는 등록된 ID로 조회하며 상위 경로·외부 symlink·내부 JSON을 다운로드하는 요청은 거절합니다. 로그인 기반 다중 사용자 서비스나 외부 공개 배포로 확장한 설정은 아닙니다.
+
+`.env`, OAuth 토큰, SMTP 비밀번호, `workspace/`, `success/`, 로그는 커밋하지 않습니다. 알림의 원문 예외와 로그에는 내부 정보가 포함될 수 있으므로 공유 전에 민감값을 제거합니다. 상세 점검은 [보안 가이드](security.md)를 따릅니다. 실제 비밀값 출력·유료 생성·업로드·스케줄러 활성화는 문서 확인이나 모의 테스트에 포함되지 않습니다.

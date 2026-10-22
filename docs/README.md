@@ -1,32 +1,25 @@
 # AutoMusic 문서 홈
 
-GitHub에서 보기 좋은 위키형 문서 인덱스입니다. 운영 절차는 [프로그램 가이드](program-guide.md)를 기준으로 관리합니다.
+**배치 업로드는 현재 비활성입니다.** `batch_upload_enabled: false`이며 설정 누락도 비활성입니다. 음악 생성과 웹 다운로드는 유지하고 YouTube는 사용자가 직접 업로드합니다. 이미지·MP4·업로드·`success/` 자동 이동은 하지 않으며 기존 결과를 보존합니다.
 
-## 문서 목록
+운영 절차는 [프로그램 가이드](program-guide.md)를 기준으로 확인합니다. 코드에 정의된 동작과 실제 환경의 관측 결과를 구분하며, 현재 스케줄러가 활성 상태라고 문서만으로 단정하지 않습니다.
 
 | 문서 | 설명 |
 | --- | --- |
-| [프로그램 가이드](program-guide.md) | 전체 구조, 수동 음악 생성, 배치 자동화, YouTube 업로드, 재시도 |
+| [프로그램 가이드](program-guide.md) | 실행 환경, 네 화면, 모델·프롬프트, 자동화, 스케줄러, 저장·재시도·알림 |
 | [보안 및 커밋 안전 가이드](security.md) | API 키, OAuth 토큰, SMTP 비밀번호, 생성물 커밋 방지 |
-
-## 문서 구조
-
-```mermaid
-flowchart TD
-    A[README.md] --> B[docs/README.md 문서 홈]
-    B --> C[program-guide.md 프로그램 가이드]
-    B --> D[security.md 보안 가이드]
-    C --> E[설치/환경변수]
-    C --> F[수동 음악 생성]
-    C --> G[배치 자동화]
-    C --> H[실패 재시도]
-    D --> I[커밋 금지 파일]
-    D --> J[비밀값 스캔]
-```
+| [프로젝트 README](../README.md) | 빠른 시작과 화면 사용법 |
 
 ## 운영자가 자주 보는 항목
 
-- 매일 자동 실행 설치: [프로그램 가이드 - macOS 매일 정오 자동 실행](program-guide.md#macos-매일-정오-자동-실행)
-- 실패 후 재시도: [프로그램 가이드 - 실패와 재시도](program-guide.md#실패와-재시도)
-- Gmail 알림 조건: [프로그램 가이드 - Gmail 알림](program-guide.md#gmail-알림)
-- 커밋 전 보안 점검: [보안 및 커밋 안전 가이드](security.md)
+- [기존 가상환경 실행과 새 환경 설치](program-guide.md#실행-환경)
+- [대시보드·미리보기·생성·라이브러리](program-guide.md#웹-대시보드)
+- [full-song 모델과 카테고리 설정](program-guide.md#카테고리와-모델)
+- [기존 자동화와 명시적 수동 실행](program-guide.md#기존-자동화와-수동-실행)
+- [스케줄러 상태·등록 해제·gate](program-guide.md#macos-스케줄러)
+- [저장 경로와 상태 파일](program-guide.md#저장-경로)
+- [실패·재시작·재시도](program-guide.md#실패와-재시도)
+- [모의 검증과 dry-run의 차이](program-guide.md#검증)
+- [SMTP 알림과 로컬 보안](program-guide.md#알림과-보안)
+
+생성·예약 설치 명령은 운영 실행용입니다. 배치 업로드에 관한 기존 흐름은 설정을 명시적으로 활성화한 경우에만 적용되며 현재 직접 실행과 dry-run 모두 차단됩니다. 읽기 전용 상태 확인이나 무과금 테스트와 구분합니다. 실제 서버·DB·배포 경로는 확인된 근거 없이 추가하지 않습니다.

@@ -40,6 +40,15 @@ class FakeService:
             }
         ]
 
+    def public_job(self, job):
+        return {"id":job["id"], "status":job["status"]}
+
+    def start_preview(self, preview_id, music_prompt, request_id):
+        if preview_id != "preview" or not isinstance(music_prompt,str) or not music_prompt.strip():
+            raise ValueError("invalid")
+        self.start_calls.append((preview_id,music_prompt))
+        return {"id":"job-001","status":"queued"}
+
     def start(self, preset_id, music_prompt):
         self.start_calls.append((preset_id, music_prompt))
         return {"id": "job-001", "status": "queued"}
@@ -63,7 +72,9 @@ class WebAppTests(unittest.TestCase):
         audio_path = Path(self.temporary_directory.name) / "audio.wav"
         audio_path.write_bytes(b"audio")
         self.service = FakeService(audio_path)
-        self.client = create_app(self.service).test_client()
+        self.app = create_app(self.service)
+        self.client = self.app.test_client()
+        self.headers = {"X-CSRF-Token":self.app.config["CSRF_TOKEN"]}
 
     def tearDown(self):
         self.temporary_directory.cleanup()
@@ -73,7 +84,7 @@ class WebAppTests(unittest.TestCase):
         response = self.client.get("/api/presets")
 
         self.assertEqual(page.status_code, 200)
-        self.assertIn("3단계", page.get_data(as_text=True))
+        self.assertIn("csrf-token", page.get_data(as_text=True))
         self.assertEqual(response.get_json()[0]["id"], "study")
 
     def test_create_default_service_loads_fixture_presets_with_injected_executor(self):
@@ -90,12 +101,32 @@ class WebAppTests(unittest.TestCase):
             executor = ImmediateExecutor()
 
             service = create_default_service(root, executor=executor)
+            self.addCleanup(service.close)
 
         self.assertEqual(service.preset_ids, ["phonk", "study"])
         self.assertEqual(service.presets["phonk"]["genre"], "Brazilian phonk")
         self.assertEqual(service.presets["study"]["genre"], "Study focus ambient")
         self.assertIs(service.track_generator, generate_lyria_track)
         self.assertIs(service.executor, executor)
+
+    def test_default_service_rejects_source_outside_category_root(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            category_root = root/'configs/categories'
+            category_root.mkdir(parents=True)
+            (root/'external.yaml').write_text('genre: External')
+            (category_root/'study.yaml').write_text('source: ../../external.yaml')
+            with self.assertRaises(ValueError):
+                create_default_service(root,executor=object())
+
+    def test_default_service_rejects_source_cycle(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            category_root = root/'configs/categories'
+            category_root.mkdir(parents=True)
+            (category_root/'study.yaml').write_text('source: study.yaml')
+            with self.assertRaises(ValueError):
+                create_default_service(root,executor=object())
 
     def test_run_web_normalizes_localhost_before_starting_app(self):
         module = load_run_web_module()
@@ -129,28 +160,12 @@ class WebAppTests(unittest.TestCase):
 
         self.assertIn("외부 네트워크 공개는 지원하지 않습니다.", stderr.getvalue())
 
-    def test_create_job_validates_input_and_starts_known_preset(self):
-        invalid = self.client.post("/api/jobs", json={"preset_id": "missing"})
-        blank = self.client.post("/api/jobs", json={"preset_id": "study", "music_prompt": "  "})
-        wrong_type = self.client.post("/api/jobs", json={"preset_id": "study", "music_prompt": 1})
-        default_prompt = self.client.post("/api/jobs", json={"preset_id": "study"})
-        valid = self.client.post(
-            "/api/jobs",
-            json={"preset_id": "study", "music_prompt": "Custom study prompt"},
-        )
-
-        self.assertEqual(invalid.status_code, 400)
-        self.assertIn("프리셋", invalid.get_json()["error"])
-        self.assertEqual(blank.status_code, 400)
-        self.assertIn("프롬프트", blank.get_json()["error"])
-        self.assertEqual(wrong_type.status_code, 400)
-        self.assertEqual(default_prompt.status_code, 202)
-        self.assertEqual(valid.status_code, 202)
-        self.assertEqual(valid.get_json()["id"], "job-001")
-        self.assertEqual(
-            self.service.start_calls,
-            [("study", None), ("study", "Custom study prompt")],
-        )
+    def test_create_job_validates_input_and_starts_preview(self):
+        for payload in ({"preset_id":"study"}, {}, {"preview_id":"preview","music_prompt":" ","request_id":"request"}):
+            self.assertEqual(self.client.post("/api/jobs",json=payload,headers=self.headers).status_code,400)
+        valid = self.client.post("/api/jobs",json={"preview_id":"preview","music_prompt":"Custom study prompt","request_id":"request"},headers=self.headers)
+        self.assertEqual(valid.status_code,202)
+        self.assertEqual(self.service.start_calls,[("preview","Custom study prompt")])
 
     def test_status_and_download_routes_hide_missing_jobs_and_assets(self):
         status = self.client.get("/api/jobs/job-001")

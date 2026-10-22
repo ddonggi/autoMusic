@@ -1,5 +1,8 @@
 import asyncio
 import json
+import io
+import contextlib
+from unittest.mock import patch
 import sys
 import tempfile
 import unittest
@@ -11,6 +14,32 @@ from automusic.music import generate_lyria_track
 
 
 class MusicGenerationTests(unittest.TestCase):
+    def test_resolved_metadata_prevents_reselection_and_reaches_producer(self):
+        metadata = {"prompt":"original","music_variant":"fixed","mood":["calm"],"texture":[],"title_options":[]}
+        received = []
+        async def producer(prompt, config, result, seconds):
+            received.append((prompt,result))
+            return [b"\0" * 48_000 * 2 * 2]
+        with tempfile.TemporaryDirectory() as tmp, patch('automusic.music.build_music_prompt_with_metadata',side_effect=AssertionError('reselected')):
+            path = asyncio.run(generate_lyria_track({'duration_seconds':1},Path(tmp),music_prompt='edited',resolved_music_result=metadata,music_chunk_producer=producer))
+            track = json.loads((path/'track.json').read_text())
+        self.assertEqual(received,[('edited',metadata)])
+        self.assertEqual(track['music_variant'],'fixed')
+        self.assertEqual(track['music_prompt'],'edited')
+
+    def test_retry_log_does_not_expose_provider_exception(self):
+        attempts = 0
+        async def producer(*args):
+            nonlocal attempts
+            attempts += 1
+            if attempts == 1:
+                raise RuntimeError('503 SECRET_PROVIDER_TOKEN')
+            return [b"\0" * 48_000 * 2 * 2]
+        stderr = io.StringIO()
+        with tempfile.TemporaryDirectory() as tmp, contextlib.redirect_stderr(stderr):
+            asyncio.run(generate_lyria_track({'duration_seconds':1,'lyria_retries':2,'lyria_retry_delay_seconds':0},Path(tmp),music_chunk_producer=producer))
+        self.assertNotIn('SECRET_PROVIDER_TOKEN',stderr.getvalue())
+
     def test_track_directory_slug_follows_configured_genre(self):
         async def producer(prompt, config, music_result, target_seconds):
             return [b"\0" * 48_000 * 2 * 2]

@@ -42,6 +42,7 @@ class WebJobServiceTests(unittest.TestCase):
                     track_generator=track_generator,
                     executor=ImmediateExecutor(),
                 )
+                self.addCleanup(service.close)
                 job = service.start("study", requested_prompt)
 
             self.assertEqual(job["music_prompt"], expected_prompt)
@@ -74,6 +75,7 @@ class WebJobServiceTests(unittest.TestCase):
                 track_generator=track_generator,
                 executor=ImmediateExecutor(),
             )
+            self.addCleanup(service.close)
             job = service.start("study", "Custom concentration prompt")
             stored = service.get(job["id"])
             audio_path = service.asset_path(job["id"], "audio")
@@ -99,6 +101,7 @@ class WebJobServiceTests(unittest.TestCase):
                 track_generator=unused_track_generator,
                 executor=DeferredExecutor(),
             )
+            self.addCleanup(service.close)
             job = service.start("study", "Prompt")
             job_dir = service._job_dir(job["id"])
             job_path = job_dir / "job.json"

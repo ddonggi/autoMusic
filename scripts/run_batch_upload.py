@@ -21,9 +21,18 @@ def main() -> None:
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
+    # Check before loading credentials or running even the dry-run pipeline.
+    try:
+        config = load_config(args.config)
+    except Exception:
+        print("batch_upload=disabled_config_unavailable")
+        return
+    if not isinstance(config, dict) or config.get("batch_upload_enabled") is not True:
+        print("batch_upload=disabled")
+        return
+
     load_dotenv()
     if args.dry_run:
-        config = load_config(args.config)
         if args.music_config:
             music_config = load_config(args.music_config)
             for key in ("image_context", "image_variants"):
@@ -33,7 +42,6 @@ def main() -> None:
         print(archived)
         return
 
-    config = load_config(args.config)
     if args.music_config:
         music_config = load_config(args.music_config)
         for key in ("image_context", "image_variants"):

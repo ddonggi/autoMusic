@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 import re
+import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -35,9 +37,10 @@ async def generate_lyria_track(
     *,
     music_prompt: str | None = None,
     music_chunk_producer: MusicChunkProducer | None = None,
+    resolved_music_result: dict[str, Any] | None = None,
 ) -> Path:
     now = datetime.now(ZoneInfo("Asia/Seoul"))
-    music_result = build_music_prompt_with_metadata(config)
+    music_result = dict(resolved_music_result) if resolved_music_result is not None else build_music_prompt_with_metadata(config)
     genre_slug = _filename_slug(str(config.get("genre", "music")))
     base_track_id = make_track_id(now, genre_slug)
     normalized_music_prompt = music_prompt.strip() if music_prompt is not None else ""
@@ -56,6 +59,7 @@ async def generate_lyria_track(
         track_dir / "track.json",
         {
             "track_id": track_id,
+            "model": "lyria-3.5",
             "status": "generated",
             "genre": config.get("genre", "Brazilian phonk"),
             "mood": music_result["mood"],
@@ -73,6 +77,48 @@ async def generate_lyria_track(
 
 
 async def _generate_lyria_pcm_chunks(
+    prompt: str,
+    config: dict[str, Any],
+    music_result: dict[str, Any],
+    target_seconds: int,
+) -> list[bytes]:
+    return await asyncio.to_thread(_generate_full_song_pcm, prompt)
+
+
+def _generate_full_song_pcm(prompt: str) -> list[bytes]:
+    from google import genai
+
+    with genai.Client(http_options={"timeout": 600000}) as client:
+        response = client.interactions.create(model="lyria-3.5", input=prompt)
+    chunks: list[bytes] = []
+
+    def collect(value: Any) -> None:
+        if isinstance(value, dict):
+            if value.get("type") == "audio" and value.get("data"):
+                chunks.append(base64.b64decode(value["data"], validate=True))
+            else:
+                for child in value.values():
+                    collect(child)
+        elif isinstance(value, list):
+            for child in value:
+                collect(child)
+
+    collect(response.model_dump(exclude_none=True))
+    if not chunks:
+        raise RuntimeError("Lyria 3.5 returned no inline audio")
+    decoded = subprocess.run(
+        ["ffmpeg", "-v", "error", "-i", "pipe:0", "-f", "s16le",
+         "-acodec", "pcm_s16le", "-ar", "48000", "-ac", "2", "pipe:1"],
+        input=b"".join(chunks), capture_output=True, timeout=120,
+    )
+    if decoded.returncode:
+        raise RuntimeError(f"Audio decoding failed: {decoded.stderr.decode(errors='replace')}")
+    if not decoded.stdout:
+        raise RuntimeError("Lyria 3.5 audio decoded to empty PCM")
+    return [decoded.stdout]
+
+
+async def _generate_realtime_pcm_chunks(
     prompt: str,
     config: dict[str, Any],
     music_result: dict[str, Any],
@@ -123,7 +169,7 @@ async def _produce_music_with_retries(
             if attempt >= max_attempts or not _is_retryable_music_error(exc):
                 raise
             print(
-                f"Lyria generation failed on attempt {attempt}/{max_attempts}: {exc}. Retrying...",
+                f"Lyria generation failed on attempt {attempt}/{max_attempts}. Retrying...",
                 file=sys.stderr,
             )
             if delay_seconds:

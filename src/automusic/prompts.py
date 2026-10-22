@@ -61,8 +61,15 @@ def build_track_title(config: dict[str, Any], music_result: dict[str, Any]) -> s
     return " ".join(word.capitalize() for word in variant.replace("-", " ").split())
 
 
-def build_music_prompt_with_metadata(config: dict[str, Any]) -> dict[str, Any]:
-    variant = _select_variant(config.get("prompt_variants"), config.get("seed"), DEFAULT_MUSIC_VARIANT)
+def build_music_prompt_with_metadata(config: dict[str, Any], *, variant_id: str | None = None) -> dict[str, Any]:
+    if variant_id is None or variant_id == "random":
+        variant = _select_variant(config.get("prompt_variants"), config.get("seed"), DEFAULT_MUSIC_VARIANT)
+    else:
+        variants = config.get("prompt_variants") or [DEFAULT_MUSIC_VARIANT]
+        matches = [item for item in variants if item.get("name") == variant_id]
+        if len(matches) != 1:
+            raise ValueError("유효한 세부 변형을 선택해 주세요.")
+        variant = dict(matches[0])
     duration = int(config.get("duration_seconds", 180))
     genre = str(config.get("genre", "Brazilian phonk"))
     bpm_min = variant.get("bpm_min", config.get("bpm_min"))

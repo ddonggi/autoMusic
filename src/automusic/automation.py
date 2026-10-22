@@ -35,6 +35,7 @@ def run_automation(
     music_config: Path,
     upload_config: Path,
     batch_count: int = 10,
+    batch_upload_enabled: bool = False,
     dry_run: bool = False,
     python_path: Path | None = None,
     runner: Runner | None = None,
@@ -58,7 +59,7 @@ def run_automation(
 
     batch_command: list[str] | None = None
     batch_ran = False
-    if should_run_batch(root, batch_count):
+    if batch_upload_enabled is True and should_run_batch(root, batch_count):
         batch_command = [
             str(python_path),
             str(project_root / "scripts" / "run_batch_upload.py"),
@@ -80,6 +81,7 @@ def run_automation(
         "daily_command": daily_command,
         "batch_command": batch_command,
         "batch_ran": batch_ran,
+        "batch_upload_enabled": batch_upload_enabled is True,
     }
 
 
