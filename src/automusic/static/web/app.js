@@ -206,6 +206,8 @@ async function loadJobs() {
   state.jobsBusy = true; $("job-list").setAttribute("aria-busy", "true");
   try {
     const jobs = items(await api("/api/jobs")); renderRecords("job-list", jobs, true);
+    const activeCount = jobs.filter(active).length;
+    if ($("sidebar-generation")) text("sidebar-generation", activeCount ? `생성 진행 ${activeCount}개` : "진행 작업 없음");
     const newlyCompleted = jobs.some((job) => job.status === "completed" && ["queued", "generating_music"].includes(state.jobStatuses?.get(job.id)));
     state.jobStatuses = new Map(jobs.map((job) => [job.id, job.status]));
     if (newlyCompleted) loadLibrary();
@@ -222,7 +224,10 @@ async function loadJobs() {
         }
       } else text("job-status", "접수한 작업이 목록에 없습니다. 새로 만들지 말고 작업 새로고침을 눌러 다시 확인하세요.");
     }
-  } catch (error) { text("jobs-message", error.message); }
+  } catch (error) {
+    text("jobs-message", error.message);
+    if ($("sidebar-generation")) text("sidebar-generation", "확인 불가");
+  }
   finally { state.jobsBusy = false; $("job-list").setAttribute("aria-busy", "false"); controls(); }
 }
 async function loadDashboard() {
@@ -280,6 +285,8 @@ function renderScheduler(data) {
   state.scheduler = data;
   const yesNo = (value) => value === true ? "예" : value === false ? "아니오" : "확인 불가";
   const status = { enabled: "켜짐", disabled: "꺼짐", unknown: "확인 불가", not_installed: "미설치", unsupported: "미지원", partial_failure: "일부 실패 · 복구 확인 필요" };
+  if ($("sidebar-scheduler")) text("sidebar-scheduler", data.state === "partial_failure" ? "확인 불가" : status[data.state] || "확인 불가");
+  if ($("sidebar-scheduler-updated")) text("sidebar-scheduler-updated", `마지막 확인 ${dateLabel(data.observed_at)}`);
   const rows = [["예약 상태", status[data.state] || "확인 불가"], ["설치됨", yesNo(data.installed)], ["등록됨", yesNo(data.registered)], ["실행 중", yesNo(data.running)], ["일정", data.schedule ? `${String(data.schedule.hour).padStart(2, "0")}:${String(data.schedule.minute).padStart(2, "0")} · 운영체제 예약 시간` : "일정 정보 없음"], ["카테고리", data.category_id || "정보 없음"], ["확인 시각", dateLabel(data.observed_at)]];
   $("scheduler-details").replaceChildren(...rows.flatMap(([label, value]) => [element("dt", label), element("dd", value)]));
   text("scheduler-message", data.error || "방금 확인한 상태입니다. 상태를 바꾸기 전에는 한 번 더 묻습니다."); schedulerControls();

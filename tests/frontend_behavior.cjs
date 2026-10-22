@@ -19,6 +19,29 @@ const source=readFileSync(resolve(__dirname, '../src/automusic/static/web/app.js
 vm.runInContext(source.slice(0,source.indexOf('$("category").addEventListener')),context);
 async function run(code){return vm.runInContext(code,context);}
 (async()=>{
+// Sidebar reuses each existing GET, replaces stale success on failure, and recovers.
+const sidebarStart=requests.length;
+response=()=>({ok:true,json:async()=>({items:[{id:'side-job',status:'generating_music'},{id:'side-queued',status:'queued'}]})});
+await run('loadJobs()');
+assert.equal(await run('$("sidebar-generation").textContent'),'생성 진행 2개');
+response=()=>{throw new Error('offline');};await run('loadJobs()');
+assert.equal(await run('$("sidebar-generation").textContent'),'확인 불가');
+response=()=>({ok:true,json:async()=>({items:[]})});await run('loadJobs()');
+assert.equal(await run('$("sidebar-generation").textContent'),'진행 작업 없음');
+assert.deepEqual(requests.slice(sidebarStart).map(r=>r.path),['/api/jobs','/api/jobs','/api/jobs']);
+const sidebarSchedulerStart=requests.length;
+response=()=>({ok:true,json:async()=>({state:'enabled',supported:true,installed:true,registered:true,enabled:true,observed_at:'2026-10-23T01:02:03Z'})});
+await run('loadScheduler()');
+assert.equal(await run('$("sidebar-scheduler").textContent'),'켜짐');
+assert.equal(await run('$("sidebar-scheduler-updated").textContent'),await run('"마지막 확인 " + dateLabel("2026-10-23T01:02:03Z")'));
+response=()=>{throw new Error('offline');};await run('loadScheduler()');
+assert.equal(await run('$("sidebar-scheduler").textContent'),'확인 불가');
+assert.equal(await run('$("sidebar-scheduler-updated").textContent'),'마지막 확인 시각 정보 없음');
+response=()=>({ok:true,json:async()=>({state:'disabled',supported:true,installed:true,registered:true,enabled:false,observed_at:'2026-10-23T02:03:04Z'})});
+await run('loadScheduler()');
+assert.equal(await run('$("sidebar-scheduler").textContent'),'꺼짐');
+assert.equal(await run('$("sidebar-scheduler-updated").textContent'),await run('"마지막 확인 " + dateLabel("2026-10-23T02:03:04Z")'));
+assert.deepEqual(requests.slice(sidebarSchedulerStart).map(r=>r.path),['/api/scheduler','/api/scheduler','/api/scheduler']);
 // Regression: clock refreshes stay outside live messages; actual status changes remain visible.
 response=()=>({ok:true,json:async()=>({items:[{id:'j',status:'queued'}]})});
 await run('loadJobs()');
@@ -96,6 +119,7 @@ assert.equal(await run('detailLabel([{intro:["piano","soft"]},{outro:"fade"}])')
 response=()=>({ok:false,status:503,json:async()=>({error:'일부 조회 실패',state:'partial_failure',installed:true,supported:true,enabled:null,schedule:{hour:9,minute:30}})});
 await run('loadScheduler()');
 assert.equal(await run('state.scheduler.state'),'partial_failure');
+assert.equal(await run('$("sidebar-scheduler").textContent'),'확인 불가','partial failure must not appear enabled or disabled');
 assert.equal(await run('state.scheduler.installed'),true);
 assert.equal(await run('state.scheduler.schedule.hour'),9);
 assert.equal(await run('$("scheduler-enable").disabled'),true);
