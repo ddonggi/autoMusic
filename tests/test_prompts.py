@@ -54,16 +54,8 @@ class PromptTests(unittest.TestCase):
         self.assertEqual(config["temperature"], 0.85)
         self.assertEqual(config["lyria_retries"], 3)
         self.assertEqual(config["lyria_retry_delay_seconds"], 30)
-        self.assertTrue(
-            {
-                "no aggressive drums or sudden drops",
-                "no long silence",
-                "no abrupt ending",
-                "no lead vocals",
-                "avoid static one-loop repetition",
-                "include subtle section changes",
-            }.issubset(config["negative_rules"])
-        )
+        self.assertEqual(config["timing_mode"], "natural")
+        self.assertTrue(config["negative_rules"])
         self.assertEqual(
             [variant["name"] for variant in config["prompt_variants"]],
             [
@@ -82,6 +74,10 @@ class PromptTests(unittest.TestCase):
             ],
         )
         for variant in config["prompt_variants"]:
+            self.assertTrue(variant["performance_direction"])
+            generated = build_music_prompt_with_metadata(config, variant_id=variant["name"])
+            self.assertIn(variant["performance_direction"], generated["prompt"])
+            self.assertNotRegex(generated["prompt"], r"\d+:\d{2}-\d+:\d{2}")
             self.assertIn(len(variant["arrangement"]), (4, 5, 6))
             time_ranges = [re.match(r"^(\d:\d{2})-(\d:\d{2}) ", line) for line in variant["arrangement"]]
             self.assertTrue(all(time_ranges))
@@ -105,6 +101,23 @@ class PromptTests(unittest.TestCase):
         for variant in config["image_variants"]:
             self.assertTrue({"visual_style", "subject", "palette", "texture"}.issubset(variant))
 
+    def test_natural_timing_preserves_progression_without_deadlines(self):
+        config = {
+            "duration_seconds": 180, "timing_mode": "natural", "vocals": "none",
+            "negative_rules": ["no vocals", "no lead vocals", "no sudden drops"],
+            "prompt_variants": [{"name": "rain", "performance_direction": "Piano leads; rain stays behind it.",
+                "arrangement": ["0:00-0:20 Intro: quiet piano", "2:35-3:00 Outro: resolve softly"]}],
+        }
+        result = build_music_prompt_with_metadata(config)
+        self.assertIn("around 180 seconds or longer", result["prompt"])
+        self.assertIn("naturally resolved ending", result["prompt"])
+        self.assertNotIn("0:00", result["prompt"])
+        self.assertIn("Intro: quiet piano -> Outro: resolve softly", result["prompt"])
+        self.assertIn("Piano leads; rain stays behind it.", result["prompt"])
+        self.assertEqual(result["prompt"].lower().count("no vocals"), 1)
+        self.assertNotIn("no lead vocals", result["prompt"])
+        self.assertEqual(result["arrangement"], ["Intro: quiet piano", "Outro: resolve softly"])
+
     def test_build_music_prompt_uses_brazilian_phonk_fields(self):
         config = {
             "duration_seconds": 180,
@@ -126,7 +139,7 @@ class PromptTests(unittest.TestCase):
         self.assertIn("132-138 BPM", prompt)
         self.assertIn("distorted 808 bass", prompt)
         self.assertIn("driving cowbell lead", prompt)
-        self.assertIn("instrumental", prompt)
+        self.assertIn("instrumental", prompt.lower())
         self.assertIn("no artist-name imitation", prompt)
 
     def test_build_image_prompt_derives_visual_prompt_without_copying_music_prompt(self):

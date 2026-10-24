@@ -243,10 +243,49 @@ async function loadDashboard() {
   finally { $("dashboard").setAttribute("aria-busy", "false"); }
 }
 function sourceLabel(value) { return ({ web: "웹 생성", web_job: "웹 생성", "web-jobs": "웹 생성", automation: "기존 자동화", track: "기존 트랙", archived: "보관된 트랙" })[value] || value || "출처 정보 없음"; }
+let libraryCategory = null;
+function libraryCategoryKey(item) { return typeof item.category_id === "string" ? item.category_id.trim() : ""; }
+function libraryCategoryLabel(key) {
+  return ({ study: "Study", lofi: "Lo-fi", phonk: "Phonk", cafe: "Cafe", fitness: "Fitness" })[key] || key || "미분류";
+}
+function selectLibraryCategory(key) { libraryCategory = key; renderLibrary(); }
 function renderLibrary() {
   const search = $("library-search").value.trim().toLocaleLowerCase(); const source = $("source-filter").value;
-  const filtered = state.library.filter((item) => (source === "all" || item.source === source) && [item.title, item.category_id, item.variant_id].filter(Boolean).join(" ").toLocaleLowerCase().includes(search));
+  const matches = state.library.filter((item) => (source === "all" || item.source === source) && [item.title, item.category_id, item.variant_id].filter(Boolean).join(" ").toLocaleLowerCase().includes(search));
+  const keys = [...new Set(state.library.map(libraryCategoryKey))].sort((a,b) => a === "" ? 1 : b === "" ? -1 : a.localeCompare(b));
+  if (libraryCategory !== null && !keys.includes(libraryCategory)) libraryCategory = null;
+  const tabs = $("library-categories");
+  if (tabs) {
+    const choices = [null, ...keys];
+    const existing = new Map(Array.from(tabs.children).map(node => [node.dataset.category, node]));
+    const buttons = choices.map(key => {
+      const identity = JSON.stringify(key);
+      const button = existing.get(identity) || element("button");
+      if (!existing.has(identity)) { button.type = "button"; button.dataset.category = identity; button.addEventListener("click", () => selectLibraryCategory(key)); }
+      button.textContent = `${key === null ? "전체" : libraryCategoryLabel(key)} (${key === null ? matches.length : matches.filter(item => libraryCategoryKey(item) === key).length})`;
+      button.setAttribute("aria-pressed", String(key === libraryCategory));
+      return button;
+    });
+    buttons.forEach((button,index) => { if (tabs.children[index] !== button) tabs.insertBefore(button,tabs.children[index] || null); });
+    Array.from(tabs.children).forEach(button => { if (!buttons.includes(button)) button.remove(); });
+  }
+  const filtered = matches.filter(item => libraryCategory === null || libraryCategoryKey(item) === libraryCategory);
+  if (libraryCategory === null) filtered.sort((a,b) => keys.indexOf(libraryCategoryKey(a)) - keys.indexOf(libraryCategoryKey(b)));
+  const container = $("library-list");
+  const headers = new Map(Array.from(container.children).filter(node => node.dataset.categoryHeading !== undefined).map(node => [node.dataset.categoryHeading,node]));
+  headers.forEach(node => node.remove());
   renderRecords("library-list", filtered);
+  if (libraryCategory === null) {
+    const articles = Array.from(container.children);
+    keys.forEach(key => {
+      const index = filtered.findIndex(item => libraryCategoryKey(item) === key);
+      if (index < 0) return;
+      const heading = headers.get(key) || element("h3", null, "library-category-heading");
+      heading.dataset.categoryHeading = key;
+      heading.textContent = `${libraryCategoryLabel(key)} · ${filtered.filter(item => libraryCategoryKey(item) === key).length}곡`;
+      container.insertBefore(heading, articles[index]);
+    });
+  }
   const count = `${state.library.length}곡 중 ${filtered.length}곡 표시${state.libraryWarning || ""}`;
   if (state.libraryError) {
     text("library-message", `${state.libraryError} ${state.libraryLoaded ? `마지막으로 불러온 목록입니다. ${count}` : "목록을 불러오지 못했습니다."} 목록 새로고침으로 다시 확인하세요.`);

@@ -14,6 +14,7 @@
 
 - [기존 가상환경 실행과 새 환경 설치](program-guide.md#실행-환경)
 - [대시보드·미리보기·생성·라이브러리](program-guide.md#웹-대시보드)
+- [라이브러리 카테고리·검색·출처 필터](program-guide.md#라이브러리-카테고리-사용법)
 - [full-song 모델과 카테고리 설정](program-guide.md#카테고리와-모델)
 - [기존 자동화와 명시적 수동 실행](program-guide.md#기존-자동화와-수동-실행)
 - [스케줄러 상태·등록 해제·gate](program-guide.md#macos-스케줄러)

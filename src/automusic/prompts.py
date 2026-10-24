@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import random
+import re
 from typing import Any
 
 
@@ -83,23 +84,36 @@ def build_music_prompt_with_metadata(config: dict[str, Any], *, variant_id: str 
     instruments = _join(instrument_values)
     texture = _join(texture_values)
     arrangement_values = _arrangement_values(variant.get("arrangement") or config.get("arrangement"))
-    arrangement = _format_arrangement(arrangement_values)
+    natural_timing = config.get("timing_mode") == "natural"
+    if natural_timing:
+        arrangement_values = [re.sub(r"^\d+:\d{2}(?:\s*[-\u2013]\s*\d+:\d{2})?\s+", "", value) for value in arrangement_values]
+        arrangement = "Musical progression: " + " -> ".join(arrangement_values) + "."
+    else:
+        arrangement = _format_arrangement(arrangement_values)
     vocals = str(config.get("vocals", "none")).lower()
-    negative_rules = _join(config.get("negative_rules", []))
+    rules = _merge_lists([], config.get("negative_rules", []))
+    if vocals in {"none", "instrumental"}:
+        rules = [rule for rule in rules if rule.strip().lower() not in {"no vocals", "no lead vocals"}]
+    negative_rules = _join(rules)
+    performance = str(variant.get("performance_direction", config.get("performance_direction", ""))).strip()
     music_context = str(config.get("music_context", "intense workout sessions"))
 
     vocal_text = "instrumental focus"
     if vocals in {"none", "instrumental"}:
-        vocal_text = "instrumental, no lead vocals"
+        vocal_text = "Instrumental only, no vocals"
     elif vocals == "sparse_chants":
         vocal_text = "instrumental focus with sparse crowd-style chants"
 
     parts = [
-        f"Create a {duration}-second {genre} track for {music_context}.",
+        (f"Create a {genre} track for {music_context}, around {duration} seconds or longer if the musical development needs it. "
+         "Treat the duration as a loose guide; prioritize a coherent development and a naturally resolved ending. "
+         "Do not extend the piece by duplicating a passage."
+         if natural_timing else f"Create a {duration}-second {genre} track for {music_context}."),
         f"{bpm}, {mood} mood." if mood else f"{bpm}.",
         f"Use {instruments}." if instruments else "",
         f"Texture: {texture}." if texture else "",
         vocal_text + ".",
+        f"Performance: {performance}" if performance else "",
         "Structure the track as a complete song, not a static loop.",
         arrangement,
         f"Rules: {negative_rules}." if negative_rules else "",
@@ -113,6 +127,7 @@ def build_music_prompt_with_metadata(config: dict[str, Any], *, variant_id: str 
         "instruments": instrument_values,
         "texture": texture_values,
         "arrangement": arrangement_values,
+        "performance_direction": performance,
         "title_options": [str(item) for item in variant.get("title_options", [])],
     }
 

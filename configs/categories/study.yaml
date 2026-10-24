@@ -1,4 +1,5 @@
 duration_seconds: 180
+timing_mode: natural
 batch_count: 10
 genre: Study focus ambient
 replace_instruments: true
@@ -29,19 +30,13 @@ temperature: 0.85
 lyria_retries: 3
 lyria_retry_delay_seconds: 30
 negative_rules:
-  - no aggressive drums or sudden drops
-  - no long silence
-  - no abrupt ending
-  - no vocals
-  - no lead vocals
-  - avoid static one-loop repetition
-  - include subtle section changes
-  - use gentle section changes for sustained concentration
-  - no sudden volume changes
-  - no harsh percussion or distracting rhythmic hooks
-  - avoid dramatic builds and climaxes
+  - no aggressive drums, harsh percussion, or distracting rhythmic hooks
+  - no sudden drops, volume changes, or dramatic climaxes
+  - avoid long silence; keep quiet musical continuity
+  - maintain a restrained dynamic range for sustained concentration
 prompt_variants:
   - name: lofi-library
+    performance_direction: "Keep felt piano in the foreground with a short, softly voiced theme; vary one inner chord tone on each return. Hold the room-tone pad far behind it and let the barely audible low pulse support the harmony without drawing attention."
     title_options: ["Sunlit Pages", "The Library Breathes"]
     bpm_min: 70
     bpm_max: 74
@@ -64,6 +59,7 @@ prompt_variants:
       - "1:55-2:30 Renew: return the warm pad and slow harmonic movement"
       - "2:30-3:00 Outro: let the piano and room tone fade naturally without abrupt cutoff"
   - name: rain-window-piano
+    performance_direction: "Place soft electric piano in the foreground, returning to a simple phrase with small changes in voicing. Use actual quiet rain on a window, distant behind the electric piano rather than a rhythmic imitation; keep the rounded bass pulse subordinate and let it recede during the sparse passage."
     title_options: ["Rain on the Margin", "Window Notes"]
     bpm_min: 72
     bpm_max: 76
@@ -86,6 +82,7 @@ prompt_variants:
       - "1:50-2:35 Renew: restore the gentle pulse and broaden the soft piano voicing"
       - "2:35-3:00 Outro: reduce the piano into quiet rain ambience and a natural fade"
   - name: deep-work-synth
+    performance_direction: "Let mellow synth keys carry a compact theme close to the listener, varying the final note of each phrase. Keep the analog pad wide and behind the keys with slow harmonic shifts, while light sub bass quietly supports the roots."
     title_options: ["A Clear Thought", "Quiet Circuits"]
     bpm_min: 70
     bpm_max: 75
@@ -108,6 +105,7 @@ prompt_variants:
       - "1:52-2:32 Renew: restore the warm pad with a slightly wider harmonic field"
       - "2:32-3:00 Outro: let the keys soften into close quiet studio air"
   - name: night-study-rhodes
+    performance_direction: "Bring soft nocturnal Rhodes into the foreground with spacious phrases and gentle chord transitions; brighten the returning theme through voicing rather than volume. Keep the transparent pad and brushed pulse behind the Rhodes, with the pulse resting between sections."
     title_options: ["Lamplight Study", "After the Last Page"]
     bpm_min: 74
     bpm_max: 78
@@ -130,6 +128,7 @@ prompt_variants:
       - "1:48-2:36 Renew: return the brushed pulse with gentle brighter voicings"
       - "2:36-3:00 Outro: release the notes into clean gentle reverb and a calm fade"
   - name: minimal-pulse-focus
+    performance_direction: "Keep a low felt-piano figure in the foreground with ample space between notes; change only one note or chord color at each return. Place the dark pad and distant pulse deep in the background, letting the pulse recede while piano resonance carries the transition."
     title_options: ["Still Concentration", "The Quiet Pulse"]
     bpm_min: 70
     bpm_max: 74
@@ -152,6 +151,7 @@ prompt_variants:
       - "1:54-2:34 Renew: bring back the pad with slightly warmer sustained harmony"
       - "2:34-3:00 Outro: allow the low piano resonance to fade without a sudden ending"
   - name: soft-cafe-jazz
+    performance_direction: "Let mellow jazz piano lead with a small theme and restrained extended chords, changing inner voices rather than adding busy runs. Keep upright bass quietly beneath the piano and brushes barely audible in the background; remove the brushes for a breathing passage before the theme returns."
     title_options: ["Coffee and Chapters", "A Table by the Window"]
     bpm_min: 72
     bpm_max: 77
@@ -174,6 +174,7 @@ prompt_variants:
       - "1:52-2:35 Renew: restore the brushes beneath warm piano voicings"
       - "2:35-3:00 Outro: thin the layers gradually into a quiet natural fade"
   - name: quiet-string-study
+    performance_direction: "Open with sparse felt piano above quiet cello roots, then let a soft sustained viola carry the foreground line. Keep cello supportive and piano replies brief; develop the theme through slow inner-voice changes at constant volume, yielding to a gentle piano cadence."
     title_options: ["Quiet Strings", "Paper and Bow"]
     bpm_min: 64
     bpm_max: 70
@@ -189,6 +190,7 @@ prompt_variants:
       - "1:20-2:15 Development: move through slow chamber harmonies at constant volume"
       - "2:15-3:00 Resolution: let strings settle and end on a soft piano cadence"
   - name: acoustic-reading
+    performance_direction: "Use only nylon-string guitar: bring the upper-string melody forward while quieter thumb-picked bass notes provide support. Revoice the same theme with small fingering changes and sparse ornaments, keeping wooden-room resonance behind the direct guitar sound; let the final chord ring naturally."
     title_options: ["Wood and Words", "An Open Chapter"]
     bpm_min: 66
     bpm_max: 72
@@ -203,6 +205,7 @@ prompt_variants:
       - "2:00-2:40 Return A: revisit the motif with subtle ornamentation"
       - "2:40-3:00 Coda: resolve with natural guitar resonance"
   - name: floating-vibraphone
+    performance_direction: "Place soft, widely spaced vibraphone phrases in the foreground, varying their endings and leaving room for each decay. Keep the airy pad distant and bowed bass low and supportive; let a sustained bass answer fill the space between phrases without overtaking the vibraphone."
     title_options: ["Floating Notes", "Soft Reflections"]
     bpm_min: 68
     bpm_max: 74
@@ -218,6 +221,7 @@ prompt_variants:
       - "1:30-2:20 Dialogue: alternate short vibraphone phrases with sustained bass"
       - "2:20-3:00 Dissolve: space the notes further apart and resolve softly"
   - name: minimal-piano-solo
+    performance_direction: "Use only felt piano, with a sparse upper-register motif in the foreground and softer inner voices providing its harmonic support. Move the theme briefly into the lower register, then return with fewer notes; keep natural resonance behind the attacks and allow the final cadence to decay."
     title_options: ["Space Between Notes", "A Quiet Margin"]
     bpm_min: 60
     bpm_max: 68
@@ -232,6 +236,7 @@ prompt_variants:
       - "1:55-2:35 Reprise: bring the motif back with fewer notes"
       - "2:35-3:00 Cadence: resolve naturally with sustained piano decay"
   - name: warm-organ-focus
+    performance_direction: "Let a quiet organ upper voice emerge gently from sustained chords while softer low organ tones support the harmony. Change one inner voice at a time to develop the theme without increasing volume; keep subdued upper harmonics forward of the faint room reverb and release the resolved chord gradually."
     title_options: ["Steady Glow", "Slow Turning Pages"]
     bpm_min: 60
     bpm_max: 66
@@ -246,6 +251,7 @@ prompt_variants:
       - "1:35-2:25 Deep focus: maintain soft low tones beneath slow harmonic movement"
       - "2:25-3:00 Closing: resolve the chord and gently release the sustained tones"
   - name: soft-electronic-flow
+    performance_direction: "Keep muted synth plucks in the foreground with a short recurring motif; vary the spacing of the plucks for the middle passage, then restore the opening phrase at the same volume. Keep the soft pulse and rounded bass subordinate, with the transparent pad farther behind; remove support layers gradually before the final resolution."
     title_options: ["Gentle Current", "Forward in Silence"]
     bpm_min: 74
     bpm_max: 82
