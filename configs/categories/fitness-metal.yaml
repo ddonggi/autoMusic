@@ -1,0 +1,183 @@
+duration_seconds: 180
+timing_mode: natural
+batch_count: 10
+replace_instruments: true
+vocals: none
+temperature: 1
+lyria_retries: 3
+lyria_retry_delay_seconds: 30
+negative_rules:
+- no lyrics, chants, spoken words, or vocal chops
+- create original riffs and melodies without artist imitation or existing song references
+- keep kick and bass distinct, with centered low frequencies and space for the guitars
+- avoid long silence or copied passages; resolve the ending naturally
+genre: Fitness metal
+music_context: original instrumental metal for strength training with riff variation and a steady physical pulse
+image_context: instrumental fitness metal artwork with rugged amplifier textures and dramatic training-room light
+title_options:
+- Weight of the Moment
+- Iron in Motion
+- One More Rep
+bpm_min: 110
+bpm_max: 155
+mood:
+- powerful
+- focused
+instruments: []
+texture:
+- articulated guitar saturation
+- centered bass foundation
+- clear band-drum attacks
+prompt_variants:
+- name: groove-metal
+  title_options:
+  - Weight of the Moment
+  - Under the Iron
+  - Grounded Force
+  bpm_min: 100
+  bpm_max: 120
+  mood:
+  - heavy
+  - deliberate
+  - confident
+  instruments:
+  - low-tuned palm-muted rhythm guitars
+  - picked electric bass
+  - acoustic band drums with firm kick and dry snare
+  - short restrained lead-guitar replies
+  texture:
+  - tight stop-start guitar articulation
+  - compact room drum ambience
+  performance_direction: Put a low-tuned palm-muted guitar riff in the foreground, with picked bass supporting its
+    roots below and a firm acoustic kick and snare defining a heavy groove. Keep short lead replies behind the riff;
+    vary its final accent, contrast it with a more open middle voicing, then return with tighter double-tracked
+    guitars and stronger drum fills rather than constant loudness.
+  arrangement:
+  - 'Opening: present the palm-muted riff with a restrained drum pulse'
+  - 'Main groove: lock picked bass and full band drums beneath the riff'
+  - 'Middle contrast: open the guitar voicing and reduce the kick density'
+  - 'Final lift: return the riff with changed accents, fuller guitars, and decisive drum replies'
+  - 'Resolution: settle into a final band accent and natural amplifier decay'
+- name: thrash-drive
+  title_options:
+  - Fast Hands Steady Ground
+  - Chasing the Last Light
+  - Pressure in the Strings
+  bpm_min: 160
+  bpm_max: 185
+  mood:
+  - urgent
+  - precise
+  - relentless
+  instruments:
+  - low-tuned tightly picked rhythm guitars
+  - fast palm-muted guitar figures
+  - driving picked electric bass
+  - acoustic band drums with rapid kick and clear snare
+  texture:
+  - dry precise guitar attacks
+  - controlled cymbal brightness
+  performance_direction: Keep fast low-tuned guitar figures in front with disciplined palm muting, while picked
+    bass follows the core riff rather than every ornament. Let a clear snare and rapid kick drive the band without
+    burying the guitar attacks; change the riff ending in the middle, briefly widen the rhythmic spacing, and finish
+    with an intensified reprise and a deliberate closing phrase.
+  arrangement:
+  - 'Opening: introduce a fast muted guitar figure and short drum pickup'
+  - 'Main drive: add picked bass and rapid but articulate band drums'
+  - 'Middle contrast: widen the riff spacing over a reduced drum pattern'
+  - 'Final lift: restore the fast theme with a new ending and energetic drum fills'
+  - 'Resolution: bring the band together for a clean final riff cadence'
+- name: halftime-breakdown
+  title_options:
+  - Hold the Weight
+  - Room for One More
+  - Heavy Ground
+  bpm_min: 110
+  bpm_max: 130
+  mood:
+  - weighty
+  - resolute
+  - spacious
+  instruments:
+  - low-tuned palm-muted guitar chugs
+  - sustained low electric bass
+  - acoustic band drums with compact kick and half-time snare
+  - short dissonant guitar harmonics
+  texture:
+  - space between heavy attacks
+  - dry close drum impact
+  performance_direction: Place low-tuned guitar chugs at the front and let sustained electric bass fill their gaps
+    quietly. Keep the snare in a half-time feel while the underlying tempo stays stable; contrast the main chug
+    with sparse guitar harmonics in the middle, then shift the riff accents and add stronger band-drum answers for
+    the final lift without resorting to sub-bass drops.
+  arrangement:
+  - 'Opening: establish spaced guitar chugs and a stable underlying pulse'
+  - 'Main weight: add sustained bass and the half-time snare pattern'
+  - 'Middle contrast: expose short guitar harmonics over reduced kick hits'
+  - 'Final lift: return heavier chug accents and fuller band-drum responses'
+  - 'Resolution: resolve the chug pattern and allow the final guitar chord to ring'
+- name: industrial-metal
+  title_options:
+  - Steel Teeth Rhythm
+  - Factory after Midnight
+  - Bolts under Tension
+  bpm_min: 120
+  bpm_max: 140
+  mood:
+  - mechanical
+  - tense
+  - determined
+  instruments:
+  - low-tuned palm-muted rhythm guitars
+  - distorted electric bass
+  - acoustic band drums with precise kick and snare
+  - quiet metallic found-sound percussion
+  - restrained synthetic background pulse
+  texture:
+  - gated guitar tails
+  - metallic detail behind the band
+  performance_direction: Keep low-tuned guitar and acoustic kick-snare attacks in the foreground with a precise
+    mechanical groove. Let electric bass support the riff, and place metallic percussion and a restrained synthetic
+    pulse behind the band rather than replacing its drums; vary the guitar gate length, briefly expose the background
+    pattern, then restore a fuller riff with more forceful band fills.
+  arrangement:
+  - 'Opening: introduce the muted guitar pattern and quiet metallic detail'
+  - 'Main machine: add electric bass and precise acoustic band drums'
+  - 'Middle contrast: reduce guitars to expose the secondary metallic pattern'
+  - 'Final lift: restore a changed guitar gate rhythm with fuller band fills'
+  - 'Resolution: unify the guitar and drums into a final phrase and let the texture decay'
+- name: melodic-metal
+  title_options:
+  - Across the Iron Ridge
+  - The Strength to Rise
+  - Light through Steel
+  bpm_min: 130
+  bpm_max: 155
+  mood:
+  - uplifting
+  - powerful
+  - purposeful
+  instruments:
+  - low-tuned palm-muted rhythm guitars
+  - short harmonized lead-guitar theme
+  - clear electric bass line
+  - acoustic band drums with driving kick and full snare
+  texture:
+  - separated rhythm and lead guitar layers
+  - warm amp sustain
+  performance_direction: Bring a short harmonized lead-guitar theme forward above low-tuned palm-muted rhythm guitars.
+    Keep electric bass centered and the acoustic drums driving beneath both guitar layers; vary the theme's final
+    notes, use a more open harmonic middle passage, then return with a higher lead response and fuller rhythm support
+    while leaving room between phrases.
+  arrangement:
+  - 'Opening: present the short lead theme over muted rhythm guitar'
+  - 'Main drive: add clear bass and full acoustic band drums'
+  - 'Middle contrast: open the chord voicing and simplify the lead line'
+  - 'Final lift: reprise the theme with a higher response and stronger rhythm guitar'
+  - 'Resolution: resolve the melody with a sustained band chord and natural cymbal decay'
+image_variants:
+- name: iron-amplifier-room
+  visual_style: cinematic instrumental metal artwork
+  subject: a low-tuned electric guitar beside a rugged amplifier in an empty industrial rehearsal room, no people
+  palette: charcoal, gunmetal, restrained amber
+  texture: brushed steel, worn speaker cloth, dramatic side light

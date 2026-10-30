@@ -50,9 +50,21 @@ function skipToContent(event) {
   event.preventDefault();
   $("content").focus();
 }
+let playingAudio = null;
+let currentView = null;
+function stopPlayback(reset = false) {
+  if (!playingAudio) return;
+  playingAudio.pause();
+  if (reset) playingAudio.currentTime = 0;
+  playingAudio = null;
+}
 function route() {
   const ids = ["dashboard", "generate", "library", "scheduler"];
   const name = ids.includes(location.hash.slice(1)) ? location.hash.slice(1) : "dashboard";
+  if (name !== currentView) {
+    stopPlayback(true);
+    currentView = name;
+  }
   ids.forEach((id) => { $(id).hidden = id !== name; });
   document.querySelectorAll(".navigation a").forEach((link) => {
     if (link.hash === `#${name}`) link.setAttribute("aria-current", "page"); else link.removeAttribute("aria-current");
@@ -155,6 +167,10 @@ function media(record, parent) {
   if (audioURL) {
     const audio = document.createElement("audio"); audio.controls = true; audio.preload = "metadata"; audio.src = audioURL;
     audio.setAttribute("aria-label", `${record.title || "음악"} 재생`);
+    audio.addEventListener("play", () => {
+      if (playingAudio && playingAudio !== audio) playingAudio.pause();
+      playingAudio = audio;
+    });
     const message = element("span", "", "note"); message.setAttribute("role", "status");
     audio.addEventListener("error", () => { message.textContent = "재생하지 못했습니다. 목록을 새로고침하거나 다운로드를 이용하세요."; });
     row.append(audio, message);
@@ -162,20 +178,83 @@ function media(record, parent) {
   if (downloadURL) { const link = element("a", "음원 다운로드"); link.href = downloadURL; link.download = ""; row.append(link); }
   parent.append(row);
 }
-function renderRecords(target, records, jobs = false) {
+function pageSlice(kind, records) {
+  const sizeKey = `${kind}Size`, pageKey = `${kind}Page`;
+  const size = [20, 50, 100].includes(state[sizeKey]) ? state[sizeKey] : 20;
+  const pages = Math.max(1, Math.ceil(records.length / size));
+  const page = Math.max(1, Math.min(pages, Number.isInteger(state[pageKey]) ? state[pageKey] : 1));
+  state[sizeKey] = size; state[pageKey] = page;
+  $(`${kind}-size`).value = String(size);
+  $(`${kind}-previous`).disabled = page === 1;
+  $(`${kind}-next`).disabled = page === pages;
+  const start = (page - 1) * size;
+  text(`${kind}-range`, `${page} / ${pages}페이지 · ${records.length ? `${start + 1}–${Math.min(start + size, records.length)} / 총 ${records.length}개` : "0개"}`);
+  return records.slice(start, start + size);
+}
+function renderJobs() { renderRecords("job-list", pageSlice("jobs", state.jobs || []), true); }
+function resetLibraryPage() { state.libraryPage = 1; renderLibrary(); }
+function bindPagination() {
+  ["library", "jobs"].forEach(kind => {
+    const render = kind === "library" ? renderLibrary : renderJobs;
+    $(`${kind}-size`).addEventListener("change", () => { state[`${kind}Size`] = Number($(`${kind}-size`).value); state[`${kind}Page`] = 1; render(); });
+    [["previous", -1], ["next", 1]].forEach(([direction, offset]) => {
+      $(`${kind}-${direction}`).addEventListener("click", () => { state[`${kind}Page`] = (state[`${kind}Page`] || 1) + offset; render(); });
+    });
+  });
+}
+const favoriteSaves = new Set();
+const favoriteChanges = new Map();
+let favoriteRevision = 0;
+function updateFavoriteButton(button, record) {
+  button.textContent = record.favorite ? "★" : "☆";
+  button.setAttribute("aria-pressed", String(record.favorite === true));
+  button.setAttribute("aria-label", `${record.title || "제목 없는 음악"} 즐겨찾기 ${record.favorite ? "해제" : "등록"}`);
+  button.title = record.favorite ? "즐겨찾기 해제" : "즐겨찾기 등록";
+  button.disabled = favoriteSaves.has(record.id);
+}
+async function toggleFavorite(id, button) {
+  const record = state.library.find(item => item.id === id);
+  if (!record || button.disabled || favoriteSaves.has(id)) return;
+  favoriteSaves.add(id); button.disabled = true;
+  try {
+    const result = await api(`/api/library/${encodeURIComponent(id)}/favorite`, { favorite: !record.favorite });
+    if (result.id !== id || typeof result.favorite !== "boolean") throw new Error("즐겨찾기 저장 결과를 확인하지 못했습니다.");
+    favoriteChanges.set(id, { revision: ++favoriteRevision, favorite: result.favorite });
+    // Merge into the latest list if a refresh completed during the save.
+    state.library.forEach(item => { if (item.id === id) item.favorite = result.favorite; });
+    renderLibrary();
+    text("favorite-message", result.favorite ? "즐겨찾기에 추가했습니다." : "즐겨찾기를 해제했습니다.");
+  } catch (error) { text("favorite-message", `즐겨찾기를 저장하지 못했습니다. ${error.message}`); }
+  finally { favoriteSaves.delete(id); button.disabled = false; renderLibrary(); }
+}
+function renderRecords(target, records, jobs = false, startIndex = 0) {
   const container = $(target);
   // Keep existing audio elements alive across status polling and search refreshes.
   const old = new Map(Array.from(container.children).map((node) => [node.dataset.id, node]));
-  const nodes = records.map((record) => {
-    const fingerprint = JSON.stringify(record);
+  const nodes = records.map((record, index) => {
+    const orderLabel = String(startIndex + index + 1).padStart(2, "0");
+    const { favorite, ...content } = record;
+    const fingerprint = JSON.stringify(content);
     const existing = old.get(String(record.id));
     if (existing && existing.dataset.fingerprint === fingerprint) {
       const timer = existing.querySelector("[data-elapsed]"); if (timer) timer.textContent = elapsed(record);
+      const order = existing.querySelector("[data-order]"); if (order) { order.textContent = orderLabel; order.setAttribute("aria-label", `목록 순서 ${startIndex + index + 1}`); }
+      const button = existing.querySelector("button"); if (!jobs && target === "library-list" && button) updateFavoriteButton(button, record);
       return existing;
     }
     const article = element("article", null, "record"); article.dataset.id = String(record.id); article.dataset.fingerprint = fingerprint;
-    const heading = element("div", null, "record-heading"); heading.append(element("h3", record.title || "제목 없는 음악"));
-    heading.append(element("span", jobs ? (labels[record.status] || "상태 확인 필요") : sourceLabel(record.source), "badge")); article.append(heading);
+    const heading = element("div", null, "record-heading");
+    if (target === "library-list") {
+      const order = element("span", orderLabel, "record-order"); order.dataset.order = "";
+      order.setAttribute("aria-label", `목록 순서 ${startIndex + index + 1}`); heading.append(order);
+    }
+    heading.append(element("h3", record.title || "제목 없는 음악"));
+    heading.append(element("span", jobs ? (labels[record.status] || "상태 확인 필요") : sourceLabel(record.source), "badge"));
+    if (!jobs && target === "library-list") {
+      const button = element("button", null, "favorite-button"); button.type = "button";
+      updateFavoriteButton(button, record); button.addEventListener("click", () => toggleFavorite(record.id, button)); heading.append(button);
+    }
+    article.append(heading);
     const meta = element("p", [record.category_id || "카테고리 정보 없음", record.variant_id || "변형 정보 없음", duration(record.duration_seconds), dateLabel(record.created_at)].filter(Boolean).join(" · "), "note");
     const timer = element("span", elapsed(record)); timer.dataset.elapsed = ""; meta.append(timer); article.append(meta);
     if (jobs && ["failed", "interrupted"].includes(record.status)) article.append(element("p", record.error || "작업이 완료되지 않았습니다.", "note"));
@@ -194,7 +273,13 @@ function renderRecords(target, records, jobs = false) {
   });
   // Reconcile without detaching unchanged players, so polling does not stop playback.
   nodes.forEach((node, index) => { if (container.children[index] !== node) container.insertBefore(node, container.children[index] || null); });
-  const keep = new Set(nodes); Array.from(container.children).forEach((node) => { if (!keep.has(node)) node.remove(); });
+  const keep = new Set(nodes); Array.from(container.children).forEach((node) => {
+    if (!keep.has(node)) {
+      const audio = node.querySelector("audio");
+      if (audio) { if (!audio.paused) audio.pause(); if (playingAudio === audio) playingAudio = null; }
+      node.remove();
+    }
+  });
 }
 function jobSummary(jobs) {
   const counts = new Map();
@@ -205,7 +290,7 @@ async function loadJobs() {
   if (state.jobsBusy) return;
   state.jobsBusy = true; $("job-list").setAttribute("aria-busy", "true");
   try {
-    const jobs = items(await api("/api/jobs")); renderRecords("job-list", jobs, true);
+    const jobs = items(await api("/api/jobs")); state.jobs = jobs; renderJobs();
     const activeCount = jobs.filter(active).length;
     if ($("sidebar-generation")) text("sidebar-generation", activeCount ? `생성 진행 ${activeCount}개` : "진행 작업 없음");
     const newlyCompleted = jobs.some((job) => job.status === "completed" && ["queued", "generating_music"].includes(state.jobStatuses?.get(job.id)));
@@ -246,14 +331,14 @@ function sourceLabel(value) { return ({ web: "웹 생성", web_job: "웹 생성"
 let libraryCategory = null;
 function libraryCategoryKey(item) { return typeof item.category_id === "string" ? item.category_id.trim() : ""; }
 function libraryCategoryLabel(key) {
-  return ({ study: "Study", lofi: "Lo-fi", phonk: "Phonk", cafe: "Cafe", fitness: "Fitness" })[key] || key || "미분류";
+  return ({ study: "Study", lofi: "Lo-fi", phonk: "Phonk", cafe: "Cafe", fitness: "Fitness", "fitness-metal": "Fitness Metal", "fitness-rock": "Fitness Rock", jazz: "Jazz", sleep: "Sleep", "japan-city-pop": "Japan City Pop" })[key] || key || "미분류";
 }
-function selectLibraryCategory(key) { libraryCategory = key; renderLibrary(); }
+function selectLibraryCategory(key) { if (libraryCategory !== key) state.libraryPage = 1; libraryCategory = key; renderLibrary(); }
 function renderLibrary() {
   const search = $("library-search").value.trim().toLocaleLowerCase(); const source = $("source-filter").value;
-  const matches = state.library.filter((item) => (source === "all" || item.source === source) && [item.title, item.category_id, item.variant_id].filter(Boolean).join(" ").toLocaleLowerCase().includes(search));
+  const matches = state.library.filter((item) => (!$("favorites-only").checked || item.favorite === true) && (source === "all" || item.source === source) && [item.title, item.category_id, item.variant_id].filter(Boolean).join(" ").toLocaleLowerCase().includes(search));
   const keys = [...new Set(state.library.map(libraryCategoryKey))].sort((a,b) => a === "" ? 1 : b === "" ? -1 : a.localeCompare(b));
-  if (libraryCategory !== null && !keys.includes(libraryCategory)) libraryCategory = null;
+  if (libraryCategory !== null && !keys.includes(libraryCategory)) { libraryCategory = null; state.libraryPage = 1; }
   const tabs = $("library-categories");
   if (tabs) {
     const choices = [null, ...keys];
@@ -274,19 +359,20 @@ function renderLibrary() {
   const container = $("library-list");
   const headers = new Map(Array.from(container.children).filter(node => node.dataset.categoryHeading !== undefined).map(node => [node.dataset.categoryHeading,node]));
   headers.forEach(node => node.remove());
-  renderRecords("library-list", filtered);
+  const visible = pageSlice("library", filtered);
+  renderRecords("library-list", visible, false, (state.libraryPage - 1) * state.librarySize);
   if (libraryCategory === null) {
     const articles = Array.from(container.children);
     keys.forEach(key => {
-      const index = filtered.findIndex(item => libraryCategoryKey(item) === key);
+      const index = visible.findIndex(item => libraryCategoryKey(item) === key);
       if (index < 0) return;
       const heading = headers.get(key) || element("h3", null, "library-category-heading");
       heading.dataset.categoryHeading = key;
-      heading.textContent = `${libraryCategoryLabel(key)} · ${filtered.filter(item => libraryCategoryKey(item) === key).length}곡`;
+      heading.textContent = `${libraryCategoryLabel(key)} · 전체 ${filtered.filter(item => libraryCategoryKey(item) === key).length}곡`;
       container.insertBefore(heading, articles[index]);
     });
   }
-  const count = `${state.library.length}곡 중 ${filtered.length}곡 표시${state.libraryWarning || ""}`;
+  const count = `전체 ${state.library.length}곡 · 조건에 맞는 ${filtered.length}곡${state.libraryWarning || ""}`;
   if (state.libraryError) {
     text("library-message", `${state.libraryError} ${state.libraryLoaded ? `마지막으로 불러온 목록입니다. ${count}` : "목록을 불러오지 못했습니다."} 목록 새로고침으로 다시 확인하세요.`);
   } else {
@@ -297,12 +383,16 @@ async function loadLibrary() {
   if (state.libraryBusy) return;
   state.libraryBusy = true;
   $("library-list").setAttribute("aria-busy", "true");
+  const revision = favoriteRevision;
   try {
     const data = await api("/api/library"); state.library = items(data); state.libraryWarning = data.unreadable_count ? ` · ${data.unreadable_count}개 항목을 읽지 못했습니다` : "";
+    // A read started before a successful save must not undo its visible result.
+    state.library.forEach(item => { const change = favoriteChanges.get(item.id); if (change && change.revision > revision) item.favorite = change.favorite; });
     const selected = $("source-filter").value;
     $("source-filter").replaceChildren(new Option("모든 출처", "all"));
     [...new Set(state.library.map((item) => item.source).filter(Boolean))].forEach((source) => $("source-filter").add(new Option(sourceLabel(source), source)));
     if (Array.from($("source-filter").options).some((option) => option.value === selected)) $("source-filter").value = selected;
+    if ($("source-filter").value !== selected) state.libraryPage = 1;
     state.libraryError = null; state.libraryLoaded = true;
     renderLibrary();
   } catch (error) { state.libraryError = error.message; renderLibrary(); }
@@ -380,8 +470,10 @@ $("refresh-library").addEventListener("click", loadLibrary);
 $("refresh-scheduler").addEventListener("click", loadScheduler);
 $("scheduler-enable").addEventListener("click", () => setScheduler(true));
 $("scheduler-disable").addEventListener("click", () => setScheduler(false));
-$("library-search").addEventListener("input", renderLibrary);
-$("source-filter").addEventListener("change", renderLibrary);
+$("library-search").addEventListener("input", resetLibraryPage);
+$("source-filter").addEventListener("change", resetLibraryPage);
+$("favorites-only").addEventListener("change", resetLibraryPage);
+bindPagination();
 window.addEventListener("hashchange", () => { route(); $("content").focus(); });
 try {
   const pending = JSON.parse(sessionStorage.getItem("automusic.pending"));

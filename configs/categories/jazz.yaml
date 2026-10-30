@@ -1,0 +1,169 @@
+duration_seconds: 180
+timing_mode: natural
+batch_count: 10
+replace_instruments: true
+vocals: none
+instruments: []
+temperature: 0.9
+lyria_retries: 3
+lyria_retry_delay_seconds: 30
+negative_rules:
+- no lyrics, chants, spoken words, or vocal chops
+- compose original themes without imitating named artists or referencing existing songs
+- avoid copied passages and abrupt cutoffs; finish with a natural resolution
+genre: Jazz
+music_context: original instrumental jazz listening with short themes, restrained improvisation, and conversational
+  ensemble interplay
+image_context: intimate instrumental jazz artwork in a softly lit listening room
+title_options:
+- A Table for Three
+- Small Hours Conversation
+- The Last Warm Light
+bpm_min: 60
+bpm_max: 130
+mood:
+- expressive
+- relaxed
+texture:
+- natural acoustic detail
+- intimate ensemble space
+prompt_variants:
+- name: piano-trio
+  bpm_min: 60
+  bpm_max: 80
+  title_options:
+  - A Table for Three
+  - Quiet Turns
+  - Between the Chords
+  instruments:
+  - acoustic jazz piano
+  - upright bass
+  - soft brushed acoustic drums
+  mood:
+  - spacious
+  - reflective
+  texture:
+  - close piano resonance
+  - warm wooden bass detail
+  performance_direction: Let piano carry a short spacious theme in the foreground, upright bass answer between phrases,
+    and soft brushes sit behind both. Vary the inner chord voices, allow a restrained piano improvisation over the
+    same harmonic shape, then return to the theme with fewer notes and an unhurried cadence.
+  arrangement:
+  - 'Opening: state a short piano theme over sparse bass roots'
+  - 'Theme: settle into a gentle trio conversation with soft brushes'
+  - 'Variation: change inner voices and exchange short piano and bass replies'
+  - 'Return: restate the theme with fewer notes and a quieter drum touch'
+  - 'Ending: resolve the harmony and leave room for the final piano decay'
+- name: brushed-swing
+  bpm_min: 100
+  bpm_max: 130
+  title_options:
+  - Brushes at the Corner
+  - A Light Step Home
+  - Small Room Swing
+  instruments:
+  - swinging acoustic jazz piano
+  - walking upright bass
+  - acoustic drums played with brushes
+  mood:
+  - light-footed
+  - sociable
+  texture:
+  - dry brush detail
+  - small-room acoustic warmth
+  performance_direction: Keep a light swing feel with walking upright bass and quiet brush swishes supporting the
+    piano theme. Bring short piano replies forward while the bass maintains a supple line underneath; trade brief
+    rhythmic answers with the drummer, avoid a loud solo, and return the theme with a compact turnaround.
+  arrangement:
+  - 'Opening: introduce a playful piano phrase and light brush time'
+  - 'Swing: add a walking bass line beneath the clear short theme'
+  - 'Exchange: trade concise piano and brushed-drum responses'
+  - 'Reprise: return to the theme with changed accents and a compact turnaround'
+  - 'Ending: gather the trio into a soft final chord'
+- name: bossa-lounge
+  bpm_min: 90
+  bpm_max: 115
+  title_options:
+  - Afternoon by the Balcony
+  - A Slow Cup of Sun
+  - Shade on the Terrace
+  instruments:
+  - nylon-string guitar
+  - soft electric piano
+  - rounded acoustic bass
+  - restrained shaker and soft hand percussion
+  mood:
+  - easygoing
+  - warm
+  texture:
+  - dry nylon-string touch
+  - soft airy lounge acoustics
+  performance_direction: Let nylon guitar establish a gentle bossa pattern with rounded bass below and restrained
+    shaker behind it. Give the electric piano a short melodic theme, then let guitar answer with a changed chord
+    voicing; preserve the relaxed rhythmic pocket through a brief instrumental variation and a gentle theme return.
+  arrangement:
+  - 'Opening: establish a light nylon-guitar bossa pattern'
+  - 'Theme: introduce electric piano over rounded bass and quiet percussion'
+  - 'Variation: let guitar answer the theme with fresh chord voicings'
+  - 'Return: bring the electric-piano melody back over the settled pocket'
+  - 'Ending: thin percussion and resolve on a softly ringing guitar chord'
+- name: late-night-sax
+  bpm_min: 65
+  bpm_max: 85
+  title_options:
+  - The Last Warm Light
+  - After the Conversation
+  - A Window Still Lit
+  instruments:
+  - soft breathy tenor saxophone
+  - restrained acoustic jazz piano
+  - upright bass
+  - very soft brushed drums
+  mood:
+  - intimate
+  - unhurried
+  texture:
+  - gentle sax breath detail
+  - low-lit room resonance
+  performance_direction: Place a soft tenor saxophone melody in the foreground with piano chords and upright bass
+    lower behind it. Keep brushes very quiet and the sax register warm without sharp high notes; develop a short
+    theme through small melodic changes, pause for a brief piano response, then return the sax to a tender final
+    cadence.
+  arrangement:
+  - 'Opening: introduce soft piano chords and a sparse bass foundation'
+  - 'Theme: let the saxophone state a brief warm melody'
+  - 'Response: give piano a restrained answer while sax rests'
+  - 'Return: reprise the sax theme with a small melodic variation'
+  - 'Ending: settle the sax over a quiet piano cadence and natural room decay'
+- name: jazz-waltz
+  bpm_min: 80
+  bpm_max: 110
+  title_options:
+  - Three Steps through Evening
+  - A Circle of Light
+  - The Turning Room
+  instruments:
+  - acoustic jazz piano
+  - upright bass
+  - light brushed acoustic drums
+  mood:
+  - flowing
+  - graceful
+  texture:
+  - gentle acoustic room depth
+  - clear piano articulation
+  performance_direction: Maintain an unmistakable three-beat jazz-waltz flow. Let piano lead a lilting short theme,
+    bass support the first beat and move lightly between chords, and brushes stay behind the melody; vary the theme's
+    inner voice, introduce a restrained contrasting phrase, then return in the same three-beat feel.
+  arrangement:
+  - 'Opening: outline a clear three-beat piano figure'
+  - 'Theme: add bass and brushes beneath the lilting melody'
+  - 'Contrast: explore a restrained complementary phrase without changing meter'
+  - 'Return: reprise the theme with gently varied inner voices'
+  - 'Ending: resolve the final three-beat phrase and allow the chord to decay'
+image_variants:
+- name: warm-jazz-listening-room
+  visual_style: intimate cinematic jazz still life
+  subject: an acoustic piano, upright bass, and brushed drum kit in an empty warmly lit listening room, no people
+  palette: walnut brown, amber, muted cream
+  texture: wood grain, soft lamp glow, understated film grain

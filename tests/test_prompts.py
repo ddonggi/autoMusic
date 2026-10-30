@@ -15,6 +15,64 @@ from automusic.config import load_config
 
 
 class PromptTests(unittest.TestCase):
+    def test_short_hooks_are_not_described_as_instrumental(self):
+        config = {
+            "vocals": "short_hooks",
+            "vocal_direction": "Create a short Brazilian Portuguese chant.",
+            "prompt_variants": [{"name": "base", "vocal_direction": "Use nonverbal chopped syllables."}],
+        }
+        result = build_music_prompt_with_metadata(config)
+        self.assertIn("brief original vocal hooks", result["prompt"])
+        self.assertIn("Do not reproduce existing lyrics or recordings", result["prompt"])
+        self.assertIn("Use nonverbal chopped syllables.", result["prompt"])
+        self.assertNotIn("Create a short Brazilian Portuguese chant.", result["prompt"])
+        self.assertNotIn("instrumental", result["prompt"].lower())
+        self.assertNotIn("no vocals", result["prompt"].lower())
+
+    def test_brazilian_variants_have_distinct_vocal_and_rhythm_directions(self):
+        root = Path(__file__).resolve().parents[1] / "configs" / "categories"
+        config = load_config(root / "phonk.yaml")
+        self.assertEqual(config["vocals"], "short_hooks")
+        self.assertEqual(config["timing_mode"], "natural")
+        variants = config["prompt_variants"]
+        self.assertEqual([v["name"] for v in variants], [
+            "tamborzao-groove", "mandelao-pressure", "automotivo-drive",
+            "montagem-switch", "melodic-montagem", "accelerated-baile",
+        ])
+        self.assertEqual(len({v["performance_direction"] for v in variants}), 6)
+        for variant in variants:
+            result = build_music_prompt_with_metadata(config, variant_id=variant["name"])
+            self.assertIn(variant["performance_direction"], result["prompt"])
+            self.assertIn(variant["vocal_direction"], result["prompt"])
+            self.assertNotIn("Instrumental only", result["prompt"])
+            self.assertNotIn("no vocals", result["prompt"].lower())
+            self.assertNotRegex(result["prompt"], r"\d+:\d{2}-\d+:\d{2}")
+
+    def test_brazilian_sound_design_is_variant_specific(self):
+        config = load_config(Path(__file__).resolve().parents[1] / 'configs/categories/phonk.yaml')
+        prompts = {v['name']: build_music_prompt_with_metadata(config, variant_id=v['name'])['prompt'].lower()
+                   for v in config['prompt_variants']}
+        for phrase in ('crunchy', 'sub fundamental', 'kick attack'):
+            self.assertIn(phrase, prompts['mandelao-pressure'])
+        for phrase in ('distorted 808', 'cowbell', 'pitch-down', 'minor-key'):
+            self.assertIn(phrase, prompts['automotivo-drive'])
+        for phrase in ('vocal chops', 'brief stop', 'immediate'):
+            self.assertIn(phrase, prompts['montagem-switch'])
+        for name in ('tamborzao-groove', 'melodic-montagem', 'accelerated-baile'):
+            self.assertNotIn('cowbell', prompts[name])
+            self.assertNotIn('pitch-down', prompts[name])
+
+    def test_fitness_retains_its_independent_instrumental_variants(self):
+        root = Path(__file__).resolve().parents[1] / "configs" / "categories"
+        config = load_config(root / "fitness.yaml")
+        self.assertNotIn("source:", (root / "fitness.yaml").read_text())
+        self.assertEqual(config["genre"], "Fitness phonk")
+        self.assertEqual(config["vocals"], "none")
+        self.assertEqual(len(config["prompt_variants"]), 9)
+        result = build_music_prompt_with_metadata(config, variant_id="rugged-cowbell")
+        self.assertIn("Instrumental only, no vocals", result["prompt"])
+        self.assertNotIn("Vocal direction:", result["prompt"])
+
     def test_build_music_prompt_uses_configured_music_context(self):
         prompt = build_music_prompt(
             {

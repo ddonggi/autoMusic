@@ -59,7 +59,8 @@ class DashboardContractTests(unittest.TestCase):
         self.assertEqual(page.status_code, 200)
         self.assertIn(self.app.config["CSRF_TOKEN"], page.get_data(as_text=True))
         categories = self.client.get("/api/categories").json["items"]
-        self.assertEqual({item["id"] for item in categories}, {"study", "phonk", "lofi", "fitness", "cafe"})
+        self.assertEqual({item["id"] for item in categories},
+                         {"study", "phonk", "lofi", "fitness", "fitness-metal", "fitness-rock", "cafe", "jazz", "sleep", "japan-city-pop"})
         category = next(item for item in categories if item["id"] == "study")
         variant_id = category["variants"][0]["id"]
         preview = self.client.post("/api/previews", json={"category_id": "study", "variant_id": variant_id}, headers=self.headers)

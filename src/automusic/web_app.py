@@ -165,7 +165,24 @@ def create_app(service: Any, *, library_service=None, scheduler_service=None) ->
 
     @app.get('/api/library')
     def library():
-        return jsonify(library_service.list_items())
+        try:
+            return jsonify(library_service.list_items())
+        except (OSError, RuntimeError):
+            return _error('라이브러리 정보를 읽을 수 없습니다. 저장 상태를 확인해 주세요.',503)
+
+    @app.post('/api/library/<result_id>/favorite')
+    def library_favorite(result_id):
+        data = request.get_json(silent=True)
+        if not isinstance(data,dict) or set(data) != {'favorite'} or type(data['favorite']) is not bool:
+            return _error('즐겨찾기 설정을 확인해 주세요.')
+        try:
+            return jsonify(library_service.set_favorite(result_id,data['favorite']))
+        except FileNotFoundError:
+            return _not_found()
+        except ValueError:
+            return _error('즐겨찾기 설정을 확인해 주세요.')
+        except (OSError, RuntimeError):
+            return _error('즐겨찾기를 저장하지 못했습니다. 다시 확인해 주세요.',503)
 
     @app.get('/api/library/<result_id>/audio')
     def library_audio(result_id):
@@ -184,7 +201,10 @@ def create_app(service: Any, *, library_service=None, scheduler_service=None) ->
 
     @app.get('/api/dashboard')
     def dashboard():
-        items = library_service.list_items()['items']
+        try:
+            items = library_service.list_items()['items']
+        except (OSError, RuntimeError):
+            return _error('라이브러리 정보를 읽을 수 없습니다. 저장 상태를 확인해 주세요.',503)
         jobs = service.list_jobs()
         return jsonify({'track_count':len(items), 'total_duration_seconds':sum(i.get('duration_seconds') or 0 for i in items),
                         'active_jobs':[j for j in jobs if j['status'] in ('queued','generating_music')],

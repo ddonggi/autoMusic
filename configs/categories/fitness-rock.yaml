@@ -1,0 +1,182 @@
+duration_seconds: 180
+timing_mode: natural
+batch_count: 10
+replace_instruments: true
+vocals: none
+temperature: 1
+lyria_retries: 3
+lyria_retry_delay_seconds: 30
+negative_rules:
+- no lyrics, chants, spoken words, or vocal chops
+- create original riffs and melodies without artist imitation or existing song references
+- keep kick and bass distinct, with centered low frequencies and space for the guitars
+- avoid long silence or copied passages; resolve the ending naturally
+genre: Fitness rock
+music_context: original instrumental rock for active training with memorable guitar hooks and a live band groove
+image_context: instrumental fitness rock artwork with electric guitars and an energetic rehearsal-room atmosphere
+title_options:
+- Keep the Wheels Turning
+- Beyond the Next Mile
+- A Stronger Tomorrow
+bpm_min: 110
+bpm_max: 155
+mood:
+- energetic
+- confident
+instruments: []
+texture:
+- clear electric guitar character
+- centered live bass groove
+- natural band-room drum ambience
+prompt_variants:
+- name: hard-rock
+  title_options:
+  - Keep the Wheels Turning
+  - Built for the Climb
+  - Another Mile Ahead
+  bpm_min: 110
+  bpm_max: 135
+  mood:
+  - confident
+  - driving
+  - bold
+  instruments:
+  - crunch rhythm guitar with a short riff hook
+  - brief overdriven lead-guitar replies
+  - grooving electric bass
+  - live acoustic drums with firm kick and open snare
+  texture:
+  - warm amplifier crunch
+  - compact live-room energy
+  performance_direction: Place a short crunchy guitar riff in front, with a grooving bass line that moves between
+    the riff's roots and firm live kick-snare support. Keep lead replies brief and behind the main hook; vary the
+    last riff bar, open the chord shapes for a contrasting middle passage, then return with fuller rhythm guitars
+    and stronger live drum fills.
+  arrangement:
+  - 'Opening: introduce the crunchy riff with a short drum pickup'
+  - 'Main groove: bring in moving bass and the full live drum kit'
+  - 'Middle contrast: open the guitar chords and simplify the bass phrase'
+  - 'Final lift: reprise the hook with a new ending and stronger band responses'
+  - 'Resolution: land the riff on a final chord and let the amplifiers settle'
+- name: garage-rock
+  title_options:
+  - Dust on the Floor
+  - Backroom Momentum
+  - No Slow Corners
+  bpm_min: 135
+  bpm_max: 155
+  mood:
+  - raw
+  - restless
+  - spirited
+  instruments:
+  - fuzzy electric-guitar hook
+  - scrappy rhythm guitar
+  - punchy electric bass
+  - live acoustic drums with firm kick, loose hi-hat, and direct snare
+  texture:
+  - rough-edged amplifier fuzz
+  - small rehearsal-room ambience
+  performance_direction: Bring a rough short guitar hook to the foreground over punchy bass and a lively acoustic
+    kit. Keep the supporting rhythm guitar lower and the snare direct; retain human timing without losing the exercise
+    pulse, vary the hook's rhythm through a stripped middle break, then return with fuller fuzz and an energetic
+    band response.
+  arrangement:
+  - 'Opening: present the raw guitar hook with sparse snare accents'
+  - 'Main groove: add punchy bass, rhythm guitar, and a loose live hi-hat'
+  - 'Middle contrast: strip to bass and drums while the guitar changes its hook rhythm'
+  - 'Final lift: return the full fuzz hook with stronger live band accents'
+  - 'Resolution: close with a concise unison phrase and natural room decay'
+- name: punk-drive
+  title_options:
+  - Run past the Streetlights
+  - All the Way Forward
+  - No Time to Stand Still
+  bpm_min: 165
+  bpm_max: 185
+  mood:
+  - urgent
+  - bright
+  - determined
+  instruments:
+  - fast downstroke rhythm guitar
+  - short bright guitar-hook replies
+  - direct picked electric bass
+  - live acoustic drums with brisk kick and sharp snare
+  texture:
+  - dry energetic guitar attack
+  - short live-room drum reflections
+  performance_direction: Keep fast downstroke guitar and a clear live snare in front, with picked bass moving steadily
+    beneath the chords. Use short upper-guitar replies as the instrumental hook rather than a vocal-like chorus;
+    change the chord ending, contrast it with a brief lower-density middle passage, then reprise at full band energy
+    while preserving sharp attacks.
+  arrangement:
+  - 'Opening: strike a short chord hook and brisk drum pickup'
+  - 'Main drive: lock downstroke guitars and picked bass to the live kit'
+  - 'Middle contrast: reduce chord density while keeping the bass pulse moving'
+  - 'Final lift: return the hook with altered chord endings and energetic drum fills'
+  - 'Resolution: finish with a deliberate band cadence and a brief ringing chord'
+- name: alternative-rock
+  title_options:
+  - A Different Way Through
+  - Edges of the Morning
+  - Turn toward the Light
+  bpm_min: 115
+  bpm_max: 140
+  mood:
+  - focused
+  - expansive
+  - resilient
+  instruments:
+  - angular clean-to-overdriven guitar hook
+  - supporting open-chord rhythm guitar
+  - melodic electric bass groove
+  - live acoustic drums with articulate kick, clear snare, and controlled dynamic shifts
+  texture:
+  - contrast between dry guitar detail and wider upper-register chords
+  - natural band-room depth
+  performance_direction: Place an angular guitar hook in front and let a melodic bass groove supply motion beneath
+    restrained live drums. Keep open rhythm chords behind the hook; explore a cleaner, more spacious middle passage
+    with a changed bass contour, then return the hook with fuller overdrive and stronger drum accents without masking
+    its shape.
+  arrangement:
+  - 'Opening: introduce the angular guitar hook with a restrained bass outline'
+  - 'Main groove: add open rhythm chords and controlled live drums'
+  - 'Middle contrast: shift to cleaner guitar and a changed melodic bass contour'
+  - 'Final lift: restore the hook with fuller overdrive and stronger band accents'
+  - 'Resolution: let the hook resolve over a thinning rhythm section'
+- name: arena-rock
+  title_options:
+  - Beyond the Next Mile
+  - Hands on the Horizon
+  - The Road Opens Up
+  bpm_min: 105
+  bpm_max: 125
+  mood:
+  - uplifting
+  - broad
+  - triumphant
+  instruments:
+  - broad electric-guitar chord hook
+  - short melodic lead-guitar response
+  - steady electric bass groove
+  - live acoustic drums with steady kick, full snare, and ringing cymbals
+  texture:
+  - open upper-register guitar space
+  - natural concert-room reflections behind the band
+  performance_direction: Bring a broad guitar chord hook forward over steady electric bass and a full live kick-snare
+    groove. Place brief lead replies above the chords and concert-room reflections behind the band; vary the hook
+    voicing, contrast it with a quieter guitar-and-bass middle, then return with fuller drums and a stronger melodic
+    answer, without crowd vocals or chants.
+  arrangement:
+  - 'Opening: introduce the broad guitar hook with a restrained drum pulse'
+  - 'Main groove: add steady bass and full live kick-snare support'
+  - 'Middle contrast: reduce the kit and expose a quieter guitar-and-bass variation'
+  - 'Final lift: return the hook with fuller cymbals and a stronger lead-guitar answer'
+  - 'Resolution: settle into a resolved final band chord with natural room decay'
+image_variants:
+- name: rehearsal-room-light
+  visual_style: cinematic instrumental rock artwork
+  subject: an electric guitar, bass amplifier, and live drum kit in an empty rehearsal room, no people
+  palette: warm cream, faded red, charcoal
+  texture: worn wood floor, amplifier cloth, warm practical lighting

@@ -1,12 +1,283 @@
-source: phonk.yaml
+duration_seconds: 180
+batch_count: 10
 genre: Fitness phonk
-music_context: intense fitness and training sessions
 image_context: fitness music video
 title_options:
-  - Train Through the Burn
-  - Stronger Than Yesterday
-  - Final Rep Focus
-  - No Days Off
-  - Built for the Climb
-  - Push Past the Limit
-  - Earn the Next Level
+- Train Through the Burn
+- Stronger Than Yesterday
+- Final Rep Focus
+- No Days Off
+- Built for the Climb
+- Push Past the Limit
+- Earn the Next Level
+bpm_min: 132
+bpm_max: 138
+mood:
+- aggressive
+- adrenaline-charged
+- focused
+instruments: []
+texture:
+- clipped saturation
+- gritty street-gym atmosphere
+- centered mono-compatible kick and sub bass
+- spacious midrange and high-frequency detail
+vocals: none
+temperature: 1.1
+lyria_retries: 3
+lyria_retry_delay_seconds: 30
+negative_rules:
+- no artist-name imitation or existing song references
+- no lyrics, chants, spoken words, or vocal chops
+- keep the kick and sub bass centered and distinct
+- avoid long silence; finish with a naturally resolved ending
+prompt_variants:
+- name: rugged-cowbell
+  bpm_min: 132
+  bpm_max: 138
+  mood:
+  - rugged
+  - aggressive
+  - heavy-lifting
+  instruments:
+  - raspy cowbell lead
+  - distorted 808 bass punches
+  - hard clipped kick
+  - dry hard snare
+  - restrained syncopated percussion
+  texture:
+  - rough concrete gym grit
+  - saturated low-end impact
+  arrangement:
+  - 'Opening: introduce the dry cowbell riff over restrained kick hits'
+  - 'Foundation: add the centered 808, hard snare, and syncopated percussion'
+  - 'Contrast: reduce the main drums and vary the riff ending above short bass pulses'
+  - 'Final drive: restore the full groove with tighter snare answers and a fuller riff variation'
+  - 'Resolution: strip layers in musical phrases and land on a deliberate final accent'
+  performance_direction: Keep the raspy cowbell riff in the foreground over a firm kick and dry snare. Let the centered
+    808 answer the riff without masking kick attacks; vary the riff ending and percussion accents, briefly reduce
+    the drums in the middle, then return with stronger rhythmic answers rather than indiscriminate loudness.
+- name: accelerated-baile
+  bpm_min: 138
+  bpm_max: 144
+  mood:
+  - accelerated
+  - explosive
+  - sprint-focused
+  instruments:
+  - fast baile-funk percussion
+  - sharp cowbell phrases
+  - tight punchy kick
+  - dry snare with short rolls
+  - compact distorted 808 bass
+  texture:
+  - street-rave pressure
+  - clipped transient energy
+  arrangement:
+  - 'Opening: tease a short cowbell phrase over a compact kick'
+  - 'Foundation: bring in fast baile percussion, snare, and centered 808 responses'
+  - 'Contrast: briefly remove the bass to expose alternate percussion accents'
+  - 'Final drive: return the hook with changed spacing and denser but controlled drum replies'
+  - 'Resolution: simplify the percussion while maintaining tempo into a clean final phrase'
+  performance_direction: Put fast interlocking percussion and a compact kick forward, with dry snare accents defining
+    a steady training pulse. Keep sharp cowbell phrases above centered 808 responses; change the hook spacing through
+    a brief percussion-only contrast, then raise the final energy with sharper fills while retaining clear low-end
+    attacks.
+- name: loose-step
+  bpm_min: 128
+  bpm_max: 134
+  mood:
+  - loose
+  - swaggering
+  - confident
+  instruments:
+  - syncopated percussion
+  - rolling 808 bass
+  - playful cowbell phrases
+  - punchy offbeat kick
+  - crisp snare backbeat
+  texture:
+  - sweaty gym floor bounce
+  - elastic groove movement
+  arrangement:
+  - 'Opening: present a playful cowbell phrase and restrained rolling bass'
+  - 'Foundation: add syncopated kick, crisp snare, and elastic percussion responses'
+  - 'Contrast: pull back the kick and change the bass phrasing beneath the hook'
+  - 'Final drive: restore the backbeat with wider upper-register hook responses'
+  - 'Resolution: simplify the bounce and let the final bass note settle naturally'
+  performance_direction: Let the rolling centered 808 and syncopated kick form a loose but reliable workout pocket.
+    Place playful cowbell phrases in front and percussion around the edges, with a crisp snare marking the pulse;
+    vary bass slides and hook endings through a short stripped passage, then return with a stronger backbeat.
+- name: tomada-drive
+  bpm_min: 134
+  bpm_max: 140
+  mood:
+  - driving
+  - tense
+  - relentless
+  instruments:
+  - pounding syncopated kick
+  - tense short cowbell hook
+  - compressed centered sub bass
+  - firm dry snare
+  - tight metallic percussion
+  texture:
+  - forward momentum
+  - metallic distortion edge
+  arrangement:
+  - 'Opening: establish the tense short hook and restrained kick pulse'
+  - 'Foundation: add firm snare and centered sub notes between kick hits'
+  - 'Contrast: mute selected kick hits while shifting one hook accent'
+  - 'Final drive: restore the full pattern with stronger snare responses and clearer bass movement'
+  - 'Resolution: settle the hook into a final rhythmic answer without a sudden cutoff'
+  performance_direction: Keep the pounding kick and firm snare in front, with a tense short cowbell hook as the
+    upper-register signal. Fit compressed sub notes between kick attacks and keep metallic percussion secondary;
+    shift one hook accent in the middle before restoring the main pattern with renewed drum weight.
+- name: slay-energy
+  bpm_min: 132
+  bpm_max: 138
+  mood:
+  - sharp
+  - confident
+  - high-impact
+  instruments:
+  - polished cowbell lead
+  - punchy 808 bass slides
+  - crisp club kick
+  - tight club snare
+  - short high percussion accents
+  texture:
+  - glossy gym intensity
+  - clean saturated loudness
+  arrangement:
+  - 'Opening: introduce a polished hook with restrained drum previews'
+  - 'Foundation: add crisp kick, tight snare, and short 808 slides'
+  - 'Contrast: strip to bass and snare while varying the hook ending'
+  - 'Final drive: return the hook with brighter answers and stronger drum accents'
+  - 'Resolution: remove supporting layers and let the final hook phrase resolve'
+  performance_direction: Bring a polished cowbell hook forward over crisp kick and snare, using short centered 808
+    slides to answer rather than obscure the drums. Keep high percussion behind the hook; vary its last notes through
+    a lean bass-and-snare middle passage, then broaden the upper-register response for the final drive.
+- name: pr-funk-pressure
+  bpm_min: 136
+  bpm_max: 142
+  mood:
+  - pressured
+  - competitive
+  - peak-set
+  instruments:
+  - dense baile-funk percussion
+  - short cowbell accents
+  - heavy centered sub-bass punches
+  - hard distinct kick
+  - cutting dry snare
+  texture:
+  - low-end pressure
+  - crowded street workout atmosphere
+  arrangement:
+  - 'Opening: present dense percussion with isolated cowbell accents'
+  - 'Foundation: introduce the hard kick, dry snare, and centered sub punches'
+  - 'Contrast: rest the sub and let two percussion patterns answer each other'
+  - 'Final drive: restore bass punches under a varied drum response and sharp hook accents'
+  - 'Resolution: release the low-end pressure gradually into a controlled final rhythm'
+  performance_direction: Let dense baile percussion drive the foreground rhythm while a hard kick and cutting snare
+    maintain a clear pulse. Use cowbell only as short accents above centered sub punches; exchange percussion answers
+    during a brief low-end rest, then restore the bass with more forceful rhythmic variation while keeping kick
+    and sub separate.
+- name: dark-mind
+  bpm_min: 130
+  bpm_max: 136
+  mood:
+  - dark
+  - focused
+  - menacing
+  instruments:
+  - shadowy distorted 808 bass motif
+  - low resonant synth stab
+  - hard compact kick
+  - dry forceful snare
+  - sparse high percussion
+  texture:
+  - shadowy low-end pressure
+  - cold saturated air
+  arrangement:
+  - 'Opening: reveal the distorted bass motif and distant low synth stabs'
+  - 'Foundation: add compact kick, dry snare, and sparse high percussion'
+  - 'Contrast: reduce the drum pattern while changing the bass motif ending'
+  - 'Final drive: restore the full pulse with stronger snare replies and articulated bass variations'
+  - 'Resolution: settle the bass motif into a final low note with a short natural decay'
+  performance_direction: Make a shadowy distorted 808 motif the foreground hook, with low synth stabs answering
+    behind it and no cowbell lead. Keep the kick transient distinct and the snare firm; vary the bass motif ending
+    in a sparse middle passage, then return with stronger snare responses and clearer bass articulation rather than
+    a wider sub image.
+- name: rave-metamorphosis
+  bpm_min: 138
+  bpm_max: 145
+  mood:
+  - rave-charged
+  - transforming
+  - euphoric
+  instruments:
+  - evolving rave synth lead
+  - distorted centered 808 bass
+  - driving syncopated kick
+  - crisp snare
+  - controlled high percussion
+  texture:
+  - neon club compression
+  - evolving filter movement
+  arrangement:
+  - 'Opening: introduce a filtered rave synth motif over a restrained kick'
+  - 'Foundation: add centered 808, crisp snare, and controlled high percussion'
+  - 'Contrast: reduce the drums while changing the lead voicing and filter color'
+  - 'Final drive: restore the pulse with a fuller synth response and renewed bass movement'
+  - 'Resolution: close the filter gradually and resolve the motif over a final rhythmic landing'
+  performance_direction: Lead with an evolving rave synth motif rather than cowbell, keeping its bright upper harmonics
+    above a centered 808 and distinct kick. Place crisp snare and restrained high percussion behind the lead; open
+    the synth filter and alter the motif in a short contrasting passage, then return with a fuller lead voicing
+    and firm drum replies.
+- name: avant-garde-phonk
+  bpm_min: 126
+  bpm_max: 134
+  mood:
+  - experimental
+  - tense
+  - unpredictable
+  instruments:
+  - angular chopped synth fragments
+  - warped centered sub bass
+  - steady compact kick anchor
+  - dry asymmetric snare accents
+  - irregular metallic percussion
+  texture:
+  - avant-garde tension
+  - gritty digital artifacts
+  arrangement:
+  - 'Opening: introduce angular synth fragments above restrained bass hints'
+  - 'Foundation: add a steady compact kick anchor and asymmetric snare replies'
+  - 'Contrast: briefly expose altered synth fragments and sparse metallic percussion'
+  - 'Final drive: rebuild the original hook shape with changed accents and articulated sub notes'
+  - 'Resolution: gather the fragments into an intentional final rhythmic phrase'
+  performance_direction: Place angular chopped synth fragments in the foreground over warped but centered bass,
+    without cowbell. Keep a compact kick anchor intelligible under asymmetric snare and metallic replies; rearrange
+    the synth fragments through a short deconstructed middle, then rebuild a recognizably related hook with stronger
+    rhythmic answers rather than abandoning the exercise pulse.
+image_variants:
+- name: cyberpunk-gym
+  visual_style: cyberpunk gym scene
+  subject: athletic silhouette training in a neon-lit urban fitness space
+  palette: electric cyan, magenta, black, high contrast
+  texture: rainy neon haze, chrome reflections, cinematic shadows
+- name: bodybuilder-shadow
+  visual_style: dramatic fitness portrait
+  subject: powerful bodybuilder silhouette in a gritty gym
+  palette: deep black, steel gray, warm highlights
+  texture: sweat, chalk dust, hard rim light, heavy shadows
+- name: phonk-album-cover
+  visual_style: phonk album cover composition
+  subject: powerful central chrome object and abstract gym energy
+  palette: black, red, silver, high contrast
+  texture: grainy cover art, bold shadows, sharp graphic framing
+music_context: intense fitness and training sessions
+timing_mode: natural
+replace_instruments: true

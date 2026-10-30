@@ -13,7 +13,8 @@ from .web_store import WebStore, atomic_json
 
 PUBLIC_ASSETS = {'audio'}
 CONFIG_FIELDS = {'genre','seed','duration_seconds','bpm_min','bpm_max','mood','instruments','texture',
-                 'arrangement','vocals','negative_rules','music_context','prompt_variants','replace_instruments','title_options'}
+                 'arrangement','vocals','negative_rules','music_context','prompt_variants','replace_instruments','title_options',
+                 'timing_mode','performance_direction','vocal_direction'}
 PUBLIC_FIELDS = ('id','category_id','variant_id','music_prompt','status','created_at','started_at',
                  'completed_at','title','duration_seconds','error')
 

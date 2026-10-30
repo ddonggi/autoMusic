@@ -60,13 +60,18 @@
         </article>
       </div>
       <div class="section-heading"><h3>내 생성 작업</h3><button id="refresh-jobs" type="button">작업 새로고침</button></div>
+      <div class="list-options"><label for="jobs-size">작업 표시 개수 <select id="jobs-size"><option value="20">20개씩</option><option value="50">50개씩</option><option value="100">100개씩</option></select></label></div>
       <p id="jobs-message" class="note" role="status"></p><p id="jobs-updated" class="note updated"></p><div id="job-list" class="record-list"></div>
+      <nav class="pagination" aria-label="생성 작업 페이지"><button id="jobs-previous" type="button" disabled aria-label="생성 작업 이전 페이지">이전</button><span id="jobs-range" class="note"></span><button id="jobs-next" type="button" disabled aria-label="생성 작업 다음 페이지">다음</button></nav>
     </section>
     <section id="library" class="view" aria-labelledby="library-title" hidden>
       <div class="section-heading"><div><h2 id="library-title">쌓이는 음악들</h2></div><button id="refresh-library" type="button">목록 새로고침</button></div>
       <div id="library-categories" class="category-tabs" role="group" aria-label="음악 카테고리"></div>
       <div class="filters"><label for="library-search">제목·카테고리 검색<input id="library-search" type="search" placeholder="음악 찾기"></label><label for="source-filter">출처<select id="source-filter"><option value="all">모든 출처</option></select></label></div>
+      <div class="list-options"><label class="favorite-filter" for="favorites-only"><input id="favorites-only" type="checkbox">즐겨찾기만 보기</label><label for="library-size">음원 표시 개수 <select id="library-size"><option value="20">20개씩</option><option value="50">50개씩</option><option value="100">100개씩</option></select></label></div>
+      <p id="favorite-message" class="note" role="status"></p>
       <p id="library-message" class="note" role="status">목록을 불러오는 중입니다.</p><div id="library-list" class="record-list"></div>
+      <nav class="pagination" aria-label="라이브러리 페이지"><button id="library-previous" type="button" disabled aria-label="라이브러리 이전 페이지">이전</button><span id="library-range" class="note"></span><button id="library-next" type="button" disabled aria-label="라이브러리 다음 페이지">다음</button></nav>
     </section>
     <section id="scheduler" class="view" aria-labelledby="scheduler-title" hidden>
       <div class="section-heading"><div><h2 id="scheduler-title">예약된 작업의 흐름</h2></div><button id="refresh-scheduler" type="button">상태 새로고침</button></div>

@@ -4,21 +4,50 @@ const vm=require('node:vm');
 const assert=require('node:assert/strict');
 const nodes=new Map();
 function node(tag='div'){
+ const listeners=new Map();const attributes=new Map();
  return {tagName:tag,textContent:'',value:'',hidden:false,disabled:false,content:'token',dataset:{},children:[],
+ paused:true,currentTime:0,pauseCalls:0,
+ pause(){this.pauseCalls+=1;this.paused=true;},
+ play(){this.paused=false;this.dispatchEvent({type:'play'});},
  get options(){return this.children;},
  replaceChildren(...items){this.children=[];this.append(...items);},
  append(...items){for(const item of items){item.parent=this;this.children.push(item);}},
  insertBefore(item,before){if(item.parent)item.remove();const i=before?this.children.indexOf(before):-1;item.parent=this;this.children.splice(i<0?this.children.length:i,0,item);},
  remove(){if(this.parent){this.parent.children=this.parent.children.filter(x=>x!==this);this.parent=null;}},
- add(item){this.append(item);},setAttribute(){},addEventListener(){},focus(){},
- querySelector(selector){return this.children.find(n=>selector==='[data-elapsed]'?'elapsed' in n.dataset:n.tagName===selector)||this.children.map(n=>n.querySelector(selector)).find(Boolean)||null;}};
+ add(item){this.append(item);},setAttribute(name,value){attributes.set(name,value);},removeAttribute(name){attributes.delete(name);},getAttribute(name){return attributes.get(name)??null;},
+ addEventListener(type,callback){if(!listeners.has(type))listeners.set(type,[]);listeners.get(type).push(callback);},
+ dispatchEvent(event){for(const callback of listeners.get(event.type)||[])callback.call(this,event);},focus(){},
+ querySelector(selector){return this.children.find(n=>selector==='[data-order]'?'order' in n.dataset:selector==='[data-elapsed]'?'elapsed' in n.dataset:n.tagName===selector)||this.children.map(n=>n.querySelector(selector)).find(Boolean)||null;}};
 }
 const requests=[];let response;
+const navigation=['dashboard','generate','library','scheduler'].map(id=>Object.assign(node('a'),{hash:`#${id}`}));
 const context=vm.createContext({document:{getElementById(id){if(!nodes.has(id))nodes.set(id,node());return nodes.get(id);},querySelector(){return {content:'token',addEventListener(){}};},createElement(tag){return node(tag);}},location:{origin:'http://localhost:8000'},Option:function(label,value){const n=node('option');n.textContent=label;n.value=value;return n;},URL,Date,Map,Set,Array,JSON,Number,String,Error,crypto:{randomUUID:()=> 'fixed-request-id'},sessionStorage:{setItem(){},removeItem(){}},window:{confirm:()=>false},fetch:async(path,options)=>{requests.push({path,options});return response();}});
 const source=readFileSync(resolve(__dirname, '../src/automusic/static/web/app.js'),'utf8');
 vm.runInContext(source.slice(0,source.indexOf('$("category").addEventListener')),context);
+vm.runInContext('var originalLoadJobs = loadJobs; var originalLoadLibrary = loadLibrary',context);
 async function run(code){return vm.runInContext(code,context);}
+context.document.querySelectorAll=selector=>selector==='.navigation a'?navigation:[];
 (async()=>{
+// Pagination retains full data while displaying only the selected window.
+assert.equal(await run('pageSlice("library", Array.from({length:21},(_,id)=>({id}))).length'),20);
+await run('state.libraryPage=2');
+assert.equal(await run('pageSlice("library", Array.from({length:21},(_,id)=>({id})))[0].id'),20);
+await run('pageSlice("library", [] )');
+assert.equal(await run('state.libraryPage'),1);
+assert.equal(await run('$("library-next").disabled'),true);
+assert.doesNotMatch(await run('$("library-range").textContent'),/1–0|0\/0/);
+await run('state.librarySize=50');
+assert.equal(await run('pageSlice("library", Array.from({length:51},(_,id)=>({id}))).length'),50);
+await run('state.libraryPage=2');
+assert.equal(await run('pageSlice("library", Array.from({length:51},(_,id)=>({id}))).length'),1);
+await run('state.librarySize=100;state.libraryPage=1');
+assert.equal(await run('pageSlice("library", Array.from({length:101},(_,id)=>({id}))).length'),100);
+await run('state.librarySize=20;state.libraryPage=1');
+assert.equal(await run('libraryCategoryLabel("fitness-metal")'), 'Fitness Metal');
+assert.equal(await run('libraryCategoryLabel("fitness-rock")'), 'Fitness Rock');
+assert.equal(await run('libraryCategoryLabel("jazz")'), 'Jazz');
+assert.equal(await run('libraryCategoryLabel("sleep")'), 'Sleep');
+assert.equal(await run('libraryCategoryLabel("japan-city-pop")'), 'Japan City Pop');
 // Sidebar reuses each existing GET, replaces stale success on failure, and recovers.
 const sidebarStart=requests.length;
 response=()=>({ok:true,json:async()=>({items:[{id:'side-job',status:'generating_music'},{id:'side-queued',status:'queued'}]})});
@@ -175,13 +204,139 @@ for (const target of [true,false]) {
  assert.equal(await run('state.scheduler.state'),target?'enabled':'disabled');
 }
 }
-await run('document.querySelectorAll=()=>[];location.hash="#library";var libraryLoads=0;loadLibrary=async()=>{libraryLoads+=1};route()');
+await run('location.hash="#library";var libraryLoads=0;loadLibrary=async()=>{libraryLoads+=1};route()');
 assert.equal(await run('libraryLoads'),1,'entering library must refresh');
+// Exercise the actual media() listeners, not a duplicate playback implementation.
+const playbackRequests=requests.length;
+await run('var firstMedia=element("div");var secondMedia=element("div");media({audio_url:"/api/library/first/audio"},firstMedia);media({audio_url:"/api/library/second/audio"},secondMedia)');
+const firstAudio=await run('firstMedia.querySelector("audio")');
+const secondAudio=await run('secondMedia.querySelector("audio")');
+assert.ok(firstAudio&&secondAudio,'media must create both audio players');
+firstAudio.currentTime=12;firstAudio.play();
+assert.equal(firstAudio.pauseCalls,0,'first play must not pause itself');
+secondAudio.currentTime=8;secondAudio.play();
+assert.equal(firstAudio.pauseCalls,1,'new audio must pause previous audio');
+assert.equal(firstAudio.paused,true);
+assert.equal(firstAudio.currentTime,12,'switching tracks preserves previous position');
+assert.equal(secondAudio.paused,false);
+secondAudio.play();
+assert.equal(secondAudio.pauseCalls,0,'repeated play of same audio must not pause itself');
+await run('route()');
+assert.equal(secondAudio.pauseCalls,0,'same route preserves playback');
+assert.equal(secondAudio.currentTime,8,'same route preserves playback position');
+await run('location.hash="#generate";route()');
+assert.equal(secondAudio.paused,true,'menu change pauses playback');
+assert.equal(secondAudio.pauseCalls,1);
+assert.equal(secondAudio.currentTime,0,'menu change resets playback position');
+assert.equal(navigation[1].getAttribute('aria-current'),'page');
+assert.equal(navigation[2].getAttribute('aria-current'),null);
+await run('location.hash="#dashboard";route()');
+assert.equal(secondAudio.pauseCalls,1,'later navigation must not pause an already cleared player');
+firstAudio.play();
+assert.equal(secondAudio.pauseCalls,1,'playing after navigation must not retain the previous player');
+assert.equal(firstAudio.paused,false);
+await run('location.hash="#generate";route()');
+assert.equal(firstAudio.currentTime,0,'resumed playback also resets when leaving');
+assert.equal(requests.length,playbackRequests,'playback and route checks must not introduce API requests');
+console.log('Audio regression groups passed: exclusive playback, repeated play, same route, menu reset, playback after navigation.');
 await run('location.hash="#generate";route();var skipPrevented=false;var contentFocused=false;$("content").focus=()=>{contentFocused=true};skipToContent({preventDefault(){skipPrevented=true}});if(!skipPrevented){location.hash="#content";route()}');
 assert.equal(await run('skipPrevented'),true,'skip link must prevent hash navigation');
 assert.equal(await run('location.hash'),'#generate','skip link must preserve selected screen URL');
 assert.equal(await run('$("generate").hidden'),false,'skip link must preserve generator');
 assert.equal(await run('$("dashboard").hidden'),true,'skip link must not open dashboard');
 assert.equal(await run('contentFocused'),true,'skip link must focus main content');
+// Bind the real filter/pagination listeners without running network startup or timers.
+vm.runInContext(source.slice(source.indexOf('$("library-search").addEventListener'),source.indexOf('window.addEventListener("hashchange"')),context);
+const template=readFileSync(resolve(__dirname,'../src/automusic/templates/web/index.html'),'utf8');
+for(const id of ['jobs-size','library-size','favorites-only']) assert.match(template,new RegExp(`for="${id}"`));
+for(const kind of ['jobs','library']) for(const suffix of ['size','previous','next','range']) assert.match(template,new RegExp(`id="${kind}-${suffix}"`));
+await run('$("source-filter").value="all";$("library-search").value="";$("favorites-only").checked=false;libraryCategory=null;state.libraryError=null;state.librarySize=20;state.libraryPage=1;state.jobsSize=20;state.jobsPage=1;state.library=Array.from({length:45},(_,i)=>({id:`page-${i}`,title:`Song ${i}`,category_id:i<25?"lofi":"study",audio_url:`/api/library/page-${i}/audio`,favorite:i===2}));renderLibrary()');
+const articles=()=>nodes.get('library-list').children.filter(n=>n.tagName==='article');
+assert.equal(articles().length,20);
+assert.equal(articles()[0].querySelector('[data-order]').textContent,'01');
+assert.equal(articles()[19].querySelector('[data-order]').textContent,'20');
+assert.equal(nodes.get('library-list').children.filter(n=>n.tagName==='h3').length,1);
+const pagedAudio=articles()[0].querySelector('audio');pagedAudio.play();pagedAudio.currentTime=12;
+await run('renderLibrary()');
+assert.equal(articles()[0].querySelector('audio'),pagedAudio);
+assert.equal(pagedAudio.pauseCalls,0);
+nodes.get('library-next').dispatchEvent({type:'click'});
+assert.equal(await run('state.libraryPage'),2);
+assert.equal(articles().length,20);
+assert.equal(articles()[0].querySelector('[data-order]').textContent,'21');
+assert.equal(nodes.get('library-list').children.filter(n=>n.tagName==='h3').length,2);
+assert.equal(pagedAudio.paused,true);
+assert.equal(await run('playingAudio'),null);
+nodes.get('library-size').value='50';nodes.get('library-size').dispatchEvent({type:'change'});
+assert.equal(await run('state.libraryPage'),1);
+assert.equal(articles().length,45);
+assert.equal(articles()[0].querySelector('[data-order]').textContent,'01');
+assert.equal(articles()[44].querySelector('[data-order]').textContent,'45');
+assert.equal(await run('state.jobsSize'),20);
+assert.equal(await run('state.jobsPage'),1);
+nodes.get('library-size').value='30';nodes.get('library-size').dispatchEvent({type:'change'});
+assert.equal(await run('state.librarySize'),20);
+await run('state.libraryPage=3;selectLibraryCategory("study")');
+assert.equal(await run('state.libraryPage'),1);
+assert.equal(articles().length,20);
+await run('libraryCategory=null;state.libraryPage=3;state.library=state.library.slice(0,21);renderLibrary()');
+assert.equal(await run('state.libraryPage'),2);
+assert.equal(articles().length,1);
+await run('state.libraryPage=1;renderLibrary()');
+const favoriteArticle=articles()[0];const favoriteAudio=favoriteArticle.querySelector('audio');const favoriteButton=favoriteArticle.querySelector('button');
+favoriteAudio.play();
+const favoriteId=favoriteArticle.dataset.id;
+response=()=>({ok:true,json:async()=>({id:favoriteId,favorite:true})});
+await run(`toggleFavorite(${JSON.stringify(favoriteId)},$("library-list").children.find(n=>n.dataset.id===${JSON.stringify(favoriteId)}).querySelector("button"))`);
+assert.equal(articles()[0],favoriteArticle,'star toggle must preserve article and player');
+assert.equal(favoriteAudio.paused,false);
+assert.equal(favoriteButton.getAttribute('aria-pressed'),'true');
+assert.equal(JSON.parse(requests.at(-1).options.body).favorite,true);
+assert.equal(requests.at(-1).options.headers['X-CSRF-Token'],'token');
+response=()=>{throw new Error('save offline');};
+await run(`toggleFavorite(${JSON.stringify(favoriteId)},$("library-list").children.find(n=>n.dataset.id===${JSON.stringify(favoriteId)}).querySelector("button"))`);
+assert.equal(favoriteButton.disabled,false);
+assert.equal(favoriteButton.getAttribute('aria-pressed'),'true','failed save must not report success');
+assert.match(nodes.get('favorite-message').textContent,/저장하지 못했습니다/);
+await run('$("favorites-only").checked=true;resetLibraryPage()');
+assert.equal(articles().every(n=>n.querySelector('button').getAttribute('aria-pressed')==='true'),true);
+// A pending job outside the displayed page still drives pending/summary state.
+await run('loadJobs=originalLoadJobs;state.pending={jobId:"outside"};state.jobsPage=1;state.jobStatuses=new Map()');
+response=()=>({ok:true,json:async()=>({items:[...Array.from({length:20},(_,i)=>({id:`done-${i}`,status:'completed'})),{id:'outside',status:'failed',error:'outside failed'}]})});
+await run('loadJobs()');
+assert.equal(nodes.get('job-list').children.length,20);
+assert.equal(await run('state.pending'),null);
+assert.match(nodes.get('form-error').textContent,/outside failed/);
+assert.match(nodes.get('jobs-message').textContent,/21개/);
+nodes.get('jobs-next').dispatchEvent({type:'click'});
+assert.equal(nodes.get('job-list').children[0].dataset.id,'outside');
+// A stale GET cannot undo a later successful save.
+await run('loadLibrary=originalLoadLibrary;$("favorites-only").checked=false;$("source-filter").value="all";state.libraryPage=1;renderLibrary()');
+const staleItems=JSON.parse(await run('JSON.stringify(state.library)'));
+let finishRead;
+response=()=>new Promise(resolve=>{finishRead=resolve;});
+const reading=run('loadLibrary()');
+response=()=>({ok:true,json:async()=>({id:favoriteId,favorite:false})});
+await run(`toggleFavorite(${JSON.stringify(favoriteId)},$("library-list").children.find(n=>n.dataset.id===${JSON.stringify(favoriteId)}).querySelector("button"))`);
+finishRead({ok:true,json:async()=>({items:staleItems})});await reading;
+assert.equal(await run(`state.library.find(n=>n.id===${JSON.stringify(favoriteId)}).favorite`),false);
+// Recreating the button while a save is pending must retain the ID-level lock.
+let finishSave;
+response=()=>new Promise(resolve=>{finishSave=resolve;});
+const saving=run(`toggleFavorite(${JSON.stringify(favoriteId)},$("library-list").children.find(n=>n.dataset.id===${JSON.stringify(favoriteId)}).querySelector("button"))`);
+await run('renderRecords("library-list",[]);renderLibrary()');
+const recreated=articles().find(n=>n.dataset.id===favoriteId).querySelector('button');
+assert.equal(recreated.disabled,true);
+const savingRequestCount=requests.length;
+await run(`toggleFavorite(${JSON.stringify(favoriteId)},$("library-list").children.find(n=>n.dataset.id===${JSON.stringify(favoriteId)}).querySelector("button"))`);
+assert.equal(requests.length,savingRequestCount);
+finishSave({ok:true,json:async()=>({id:favoriteId,favorite:true})});await saving;
+assert.equal(recreated.disabled,false);
+assert.equal(recreated.getAttribute('aria-pressed'),'true');
+for(const [id,event] of [['library-search','input'],['source-filter','change'],['favorites-only','change']]) {
+ await run('state.libraryPage=2');nodes.get(id).dispatchEvent({type:event});
+ assert.equal(await run('state.libraryPage'),1,`${id} must reset pagination through its real listener`);
+}
+console.log('Pagination/favorites passed: 20/50/100 boundaries, independent controls, clamp, grouping, audio retention/removal, save success/failure, CSRF, full pending-job tracking.');
 console.log('Design regression groups passed: non-live timestamps, status changes, persistent library errors, recovery, model details, audio node reuse. Partial-failure recovery and 14 baseline behavior groups passed: URL boundaries, null metadata, ambiguous acceptance, duplicate click, immutable retry, CSRF, accepted job, cancel, scheduler unknown, locks');
 })().catch(e=>{console.error(e);process.exitCode=1;});

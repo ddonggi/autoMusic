@@ -11,6 +11,8 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
 from automusic.web_jobs import WebJobService
 from automusic.web_app import create_app
+from automusic.config import load_config
+from automusic.prompts import build_music_prompt_with_metadata
 
 
 class Deferred:
@@ -126,6 +128,41 @@ class DashboardJobsTests(unittest.TestCase):
         preview = self.service.create_preview('study','a')
         job = self.service.start_preview(preview['id'],'prompt',str(uuid4()))
         self.assertEqual(self.service.get(job['id'])['snapshot']['lyria_retries'],1)
+
+    def test_preview_preserves_base_performance_and_vocal_directions(self):
+        self.config.update(timing_mode='natural', vocals='short_hooks',
+                           performance_direction='Let bass answer the kick.',
+                           vocal_direction='Use new brief Portuguese calls.')
+        preview = self.service.create_preview('study', 'a')
+        self.assertIn('loose guide', preview['prompt'])
+        self.assertIn(self.config['performance_direction'], preview['prompt'])
+        self.assertIn(self.config['vocal_direction'], preview['prompt'])
+
+    def test_brazilian_web_previews_match_cli_and_worker_snapshot(self):
+        path = Path(__file__).resolve().parents[1] / 'configs/categories/phonk.yaml'
+        config = load_config(path)
+        self.service.presets['phonk'] = config
+        client = create_app(self.service).test_client()
+        for variant in config['prompt_variants']:
+            with self.subTest(variant=variant['name']):
+                response = client.post('/api/previews',
+                    json={'category_id':'phonk', 'variant_id':variant['name']},
+                    headers={'X-CSRF-Token':client.application.config['CSRF_TOKEN']})
+                self.assertEqual(response.status_code, 201)
+                preview = response.get_json()
+                expected = build_music_prompt_with_metadata(config, variant_id=variant['name'])
+                self.assertEqual(preview['prompt'], expected['prompt'])
+                self.assertIn('loose guide', preview['prompt'])
+                self.assertIn(variant['vocal_direction'], preview['prompt'])
+                job = self.service.start_preview(preview['id'], preview['prompt'], str(uuid4()))
+                fn, args = self.executor.calls[-1]
+                fn(*args)
+                received_config, prompt, result = self.received[-1]
+                self.assertEqual(received_config['timing_mode'], 'natural')
+                self.assertEqual(received_config['lyria_retries'], 1)
+                self.assertEqual(prompt, preview['prompt'])
+                self.assertEqual(result, expected)
+                self.assertEqual(self.service.get(job['id'])['status'], 'completed')
 
     def test_audio_range_head_and_download(self):
         preview = self.service.create_preview('study','a')

@@ -1,0 +1,169 @@
+duration_seconds: 180
+timing_mode: natural
+batch_count: 10
+replace_instruments: true
+vocals: none
+instruments: []
+temperature: 0.9
+lyria_retries: 3
+lyria_retry_delay_seconds: 30
+negative_rules:
+- no lyrics, chants, spoken words, or vocal chops
+- compose original themes without imitating named artists or referencing existing songs
+- avoid copied passages and abrupt cutoffs; finish with a natural resolution
+- no drums, percussion, prominent bass pulse, or forceful metronomic beat
+- no sudden drops, dramatic builds, large climaxes, or abrupt volume changes
+- no thunder, alarms, sharp impacts, or startling environmental sounds
+genre: Sleep ambient
+music_context: quiet original instrumental ambient listening at bedtime with loose breathing-like phrasing and minimal
+  stimulation
+image_context: quiet nighttime ambient artwork with diffused moonlight and soft interior textures
+title_options:
+- When the Room Grows Quiet
+- A Softer Horizon
+- Before the Morning
+bpm_min: 45
+bpm_max: 65
+mood:
+- gentle
+- still
+texture:
+- soft low-contrast dynamics
+- smooth unobtrusive room resonance
+prompt_variants:
+- name: felt-piano-night
+  bpm_min: 45
+  bpm_max: 60
+  title_options:
+  - When the Room Grows Quiet
+  - The Lamp Goes Low
+  - Notes before Dawn
+  instruments:
+  - very soft felt piano
+  - faint sustained harmonic air
+  mood:
+  - tender
+  - quiet
+  texture:
+  - muted piano attacks
+  - soft natural sustain
+  performance_direction: Treat the BPM range as a loose breathing-like guide, without a counted beat. Let very soft
+    felt piano notes sit gently in front of faint harmonic air; vary a single inner note of the sparse theme, keep
+    pauses connected by quiet resonance, and let the final chord dissolve without a rise in intensity.
+  arrangement:
+  - 'Opening: let a few soft felt-piano notes emerge from quiet harmonic air'
+  - 'Continuation: repeat the short phrase with gently altered spacing'
+  - 'Small change: move one inner voice while keeping the same soft dynamic'
+  - 'Return: revisit the opening notes with even fewer attacks'
+  - 'Ending: let the resolved piano chord and background air dissolve slowly'
+- name: warm-pad-drift
+  bpm_min: 45
+  bpm_max: 55
+  title_options:
+  - A Softer Horizon
+  - Still Air Turning
+  - The Warmest Shade
+  instruments:
+  - slowly evolving warm synthesizer pads
+  - very soft upper harmonic tones
+  mood:
+  - weightless
+  - settled
+  texture:
+  - rounded slow attacks
+  - smooth overlapping sustained layers
+  performance_direction: Use loose breathing-like timing rather than a pulse or strict bar grid. Let warm pads carry
+    slow harmonic movement in the foreground, with upper harmonic tones faint and distant; alter one chord tone
+    at a time, overlap releases so there are no sudden gaps, and ease into a final resolved harmony at constant
+    low volume.
+  arrangement:
+  - 'Opening: let a warm sustained chord arrive with a slow rounded attack'
+  - 'Drift: overlap a second harmony without introducing a beat'
+  - 'Small change: shift one inner tone beneath faint upper harmonics'
+  - 'Return: settle toward the opening chord color with fewer layers'
+  - 'Ending: release the resolved harmony gently without a swell'
+- name: rain-room
+  bpm_min: 45
+  bpm_max: 60
+  title_options:
+  - Rain beyond the Curtain
+  - A Quiet Window at Night
+  - The Room beyond the Rain
+  instruments:
+  - soft sparse electric piano
+  - quiet actual rain on a window
+  - faint warm ambient pad
+  mood:
+  - sheltered
+  - calm
+  texture:
+  - distant steady window rain
+  - soft interior resonance
+  performance_direction: Keep sparse electric piano gently in front and actual quiet window rain distant behind
+    it, with a faint pad supporting the harmony. Treat the tempo as loose breathing-like spacing, never synchronize
+    rain into a beat; vary the piano voicing minimally and keep rain even, with no thunder or sudden gusts, as the
+    music resolves softly.
+  arrangement:
+  - 'Opening: establish quiet distant window rain and faint warm harmony'
+  - 'Continuation: introduce sparse soft electric-piano notes'
+  - 'Small change: alter a piano chord tone while rain remains even'
+  - 'Return: revisit the first piano phrase with less foreground detail'
+  - 'Ending: resolve the piano and taper the pad and rain smoothly together'
+- name: ambient-guitar
+  bpm_min: 50
+  bpm_max: 65
+  title_options:
+  - Strings in the Quiet Air
+  - The Evening Unfolds
+  - A Soft Line of Light
+  instruments:
+  - soft fingerpicked nylon guitar
+  - faint sustained guitar harmonics
+  mood:
+  - restful
+  - warm
+  texture:
+  - rounded string attacks
+  - gentle diffuse guitar resonance
+  performance_direction: Use loosely spaced fingerpicked nylon-guitar phrases as a breathing-like gesture, not a
+    strict repeating beat. Keep the direct guitar soft in the foreground and sustained harmonics faint behind it;
+    revoice a short theme with fewer notes, avoid string squeaks or sharp plucks, and resolve into natural guitar
+    decay.
+  arrangement:
+  - 'Opening: introduce a soft widely spaced fingerpicked phrase'
+  - 'Continuation: add faint sustained harmonics behind the same theme'
+  - 'Small change: revoice the guitar phrase without increasing attack strength'
+  - 'Return: bring back the opening notes with wider spacing'
+  - 'Ending: let a resolved guitar chord ring and decay gently'
+- name: soft-strings
+  bpm_min: 45
+  bpm_max: 60
+  title_options:
+  - Before the Morning
+  - A Gentle Fold of Night
+  - Quiet Threads
+  instruments:
+  - very soft sustained viola
+  - muted cello
+  - faint high string harmonics
+  mood:
+  - still
+  - tender
+  texture:
+  - smooth bowed-string transitions
+  - subdued warm chamber resonance
+  performance_direction: Let a very soft viola line emerge gently above muted cello support, with high harmonics
+    far behind. Keep timing loose and breathing-like rather than counted, move one inner string voice at a time,
+    and avoid vibrato surges, crescendos, or sharp bow attacks; settle into a quiet final consonance.
+  arrangement:
+  - 'Opening: let muted cello and a soft viola tone appear gradually'
+  - 'Continuation: move through closely related sustained harmonies'
+  - 'Small change: shift one inner string voice beneath faint harmonics'
+  - 'Return: settle into the opening harmonic color at the same low volume'
+  - 'Ending: release the resolved string chord slowly without a crescendo'
+image_variants:
+- name: quiet-moonlit-room
+  visual_style: minimal tranquil nighttime still life
+  subject: soft curtains beside a closed notebook in an empty moonlit bedroom, no people
+  palette: muted midnight blue, warm gray, soft ivory
+  texture: diffused moonlight, soft fabric, low contrast

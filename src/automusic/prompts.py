@@ -96,6 +96,7 @@ def build_music_prompt_with_metadata(config: dict[str, Any], *, variant_id: str 
         rules = [rule for rule in rules if rule.strip().lower() not in {"no vocals", "no lead vocals"}]
     negative_rules = _join(rules)
     performance = str(variant.get("performance_direction", config.get("performance_direction", ""))).strip()
+    vocal_direction = str(variant.get("vocal_direction", config.get("vocal_direction", ""))).strip()
     music_context = str(config.get("music_context", "intense workout sessions"))
 
     vocal_text = "instrumental focus"
@@ -103,6 +104,11 @@ def build_music_prompt_with_metadata(config: dict[str, Any], *, variant_id: str 
         vocal_text = "Instrumental only, no vocals"
     elif vocals == "sparse_chants":
         vocal_text = "instrumental focus with sparse crowd-style chants"
+    elif vocals == "short_hooks":
+        vocal_text = (
+            "Use brief original vocal hooks as rhythmic material, not continuous singing. "
+            "Do not reproduce existing lyrics or recordings. Avoid long lyrical verses"
+        )
 
     parts = [
         (f"Create a {genre} track for {music_context}, around {duration} seconds or longer if the musical development needs it. "
@@ -113,6 +119,7 @@ def build_music_prompt_with_metadata(config: dict[str, Any], *, variant_id: str 
         f"Use {instruments}." if instruments else "",
         f"Texture: {texture}." if texture else "",
         vocal_text + ".",
+        f"Vocal direction: {vocal_direction}" if vocals == "short_hooks" and vocal_direction else "",
         f"Performance: {performance}" if performance else "",
         "Structure the track as a complete song, not a static loop.",
         arrangement,
@@ -128,6 +135,7 @@ def build_music_prompt_with_metadata(config: dict[str, Any], *, variant_id: str 
         "texture": texture_values,
         "arrangement": arrangement_values,
         "performance_direction": performance,
+        "vocal_direction": vocal_direction if vocals == "short_hooks" else "",
         "title_options": [str(item) for item in variant.get("title_options", [])],
     }
 

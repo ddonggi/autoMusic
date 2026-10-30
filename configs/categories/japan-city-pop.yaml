@@ -1,0 +1,180 @@
+duration_seconds: 180
+timing_mode: natural
+batch_count: 10
+replace_instruments: true
+vocals: none
+instruments: []
+temperature: 0.9
+lyria_retries: 3
+lyria_retry_delay_seconds: 30
+negative_rules:
+- no lyrics, chants, spoken words, or vocal chops
+- compose original themes without imitating named artists or referencing existing songs
+- avoid copied passages and abrupt cutoffs; finish with a natural resolution
+genre: Japanese city pop
+music_context: original instrumental city pop with 1970s and 1980s Japanese urban pop-inspired instrumentation,
+  melodic hooks, and polished band interplay
+image_context: original instrumental city-pop artwork evoking a luminous Japanese city evening without real brands
+  or artist references
+title_options:
+- Tail Lights by the Bay
+- The City Takes a Breath
+- Windows after Rain
+bpm_min: 72
+bpm_max: 126
+mood:
+- melodic
+- warm
+texture:
+- polished warm studio detail
+- clear bass and open upper-register space
+prompt_variants:
+- name: neon-cruise
+  bpm_min: 100
+  bpm_max: 116
+  title_options:
+  - Tail Lights by the Bay
+  - The Long Way Downtown
+  - Midnight Lane Change
+  instruments:
+  - warm electric piano
+  - clean electric-guitar accents
+  - melodic electric bass
+  - live acoustic drums
+  - subtle analog string-synth pad
+  mood:
+  - flowing
+  - confident
+  texture:
+  - warm electric-piano glow
+  - crisp clean-guitar detail
+  performance_direction: Lead with a short electric-piano hook over melodic electric bass and a smooth live drum
+    pocket. Keep clean guitar accents to the sides and the string-synth pad behind the band; vary the hook's last
+    notes, let guitar give a brief contrasting answer, then return with a fuller chord voicing and a natural cadence.
+  arrangement:
+  - 'Opening: introduce the electric-piano hook with light guitar accents'
+  - 'Groove: add melodic bass and a smooth live drum pocket'
+  - 'Contrast: let guitar answer while the piano changes its inner voicing'
+  - 'Return: restate the keyboard hook over the settled band groove'
+  - 'Ending: resolve the melody and release the supporting pad'
+- name: city-funk
+  bpm_min: 108
+  bpm_max: 122
+  title_options:
+  - Sidewalk Syncopation
+  - The City Takes a Breath
+  - Green Light Groove
+  instruments:
+  - syncopated electric bass
+  - tight clean rhythm guitar
+  - short electric-piano chords
+  - restrained brass-section accents
+  - live funk drums
+  mood:
+  - playful
+  - buoyant
+  texture:
+  - dry articulate bass
+  - tight rhythmic studio separation
+  performance_direction: Put syncopated bass and clean guitar in front with a tight live drum pocket. Let electric-piano
+    chords and brief brass accents answer from behind rather than play continuously; vary the bass turnaround, strip
+    to the rhythm section for contrast, then restore the instrumental hook with sharper ensemble replies.
+  arrangement:
+  - 'Opening: establish a short syncopated bass and guitar exchange'
+  - 'Groove: add live drums and clipped electric-piano chords'
+  - 'Contrast: leave bass and drums forward with brief guitar variations'
+  - 'Return: bring back the hook with restrained brass answers'
+  - 'Ending: close the groove with a concise ensemble phrase'
+- name: coastal-breeze
+  bpm_min: 90
+  bpm_max: 106
+  title_options:
+  - A Road beside the Water
+  - Balcony over the Bay
+  - Late Sun on the Coast
+  instruments:
+  - relaxed clean electric guitar
+  - warm Rhodes electric piano
+  - rounded melodic electric bass
+  - light live drums
+  - quiet shaker
+  mood:
+  - easygoing
+  - sunlit
+  texture:
+  - soft coastal studio air
+  - rounded guitar and Rhodes tones
+  performance_direction: Let relaxed clean guitar carry a short melody above rounded bass, with Rhodes harmony and
+    a quiet shaker behind it. Keep live drums light and the groove unhurried; change the guitar voicing, give Rhodes
+    a brief answering theme in the middle, then return to the opening melody with a soft resolved ending.
+  arrangement:
+  - 'Opening: introduce the relaxed guitar melody and warm Rhodes chords'
+  - 'Groove: add rounded bass, light drums, and quiet shaker'
+  - 'Contrast: let Rhodes answer the melody over a simplified guitar part'
+  - 'Return: restate the guitar theme with a gently changed ending'
+  - 'Ending: thin the rhythm section and resolve the final chord'
+- name: rainy-city-ballad
+  bpm_min: 72
+  bpm_max: 88
+  title_options:
+  - Windows after Rain
+  - The Last Train Reflection
+  - An Empty Crossing
+  instruments:
+  - soft electric piano
+  - restrained analog synth melody
+  - warm electric bass
+  - gentle live acoustic drums
+  - faint clean-guitar swells
+  mood:
+  - reflective
+  - tender
+  texture:
+  - soft urban-night harmonic warmth
+  - faint reflective reverb
+  performance_direction: Place a soft electric-piano theme forward over warm bass and gentle live drums. Keep the
+    analog synth restrained and guitar swells distant; develop the instrumental melody through a small harmonic
+    turn, let the synth provide a brief middle answer, and return to a quieter piano cadence without a dramatic
+    power-ballad climax.
+  arrangement:
+  - 'Opening: introduce a soft electric-piano theme in spacious harmony'
+  - 'Continuation: add warm bass and gentle live drums'
+  - 'Contrast: let a restrained synth answer across a small harmonic turn'
+  - 'Return: revisit the piano melody with fewer supporting layers'
+  - 'Ending: resolve the piano and allow the faint guitar resonance to decay'
+- name: night-fusion
+  bpm_min: 110
+  bpm_max: 126
+  title_options:
+  - Crossing the Night Grid
+  - A Turn past Midnight
+  - Elevated Line
+  instruments:
+  - articulate electric-piano and synth-keyboard hooks
+  - precise electric bass
+  - clean electric-guitar rhythm accents
+  - short warm saxophone replies
+  - detailed live fusion drums
+  mood:
+  - nimble
+  - bright
+  texture:
+  - precise band articulation
+  - polished warm keyboard depth
+  performance_direction: Keep a compact keyboard hook in front over precise bass and detailed live drums, with clean
+    guitar accents supporting the rhythm. Let warm saxophone answer only between keyboard phrases; vary the hook
+    rhythm through a short contrasting keyboard passage, then reunite the ensemble around the theme without a long
+    solo or abrupt tempo change.
+  arrangement:
+  - 'Opening: introduce the compact keyboard hook and precise bass outline'
+  - 'Groove: add detailed live drums and clean rhythmic guitar accents'
+  - 'Contrast: explore a short keyboard variation with brief saxophone replies'
+  - 'Return: bring the original hook back with a fresh bass turnaround'
+  - 'Ending: resolve the ensemble phrase with a warm keyboard chord'
+image_variants:
+- name: coastal-city-evening
+  visual_style: original retro urban pop illustration
+  subject: an imaginary Japanese coastal city road with glowing windows and reflections at dusk, no people, no logos,
+    no lettering
+  palette: muted coral, deep teal, warm cream, dusk blue
+  texture: soft print grain, reflected window light, gentle evening haze
